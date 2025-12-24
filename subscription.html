@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to Pro | ByteBuddy AI</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --dark: #2C3E50;
+            --bg: #f4f7f6;
+            --success: #2ecc71;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            text-align: center;
+        }
+        
+        /* Hero Section */
+        .hero {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        .hero h1 { color: var(--dark); font-size: 2.5rem; margin-bottom: 10px; }
+        .hero p { font-size: 1.1rem; color: #666; margin-bottom: 30px; }
+        .benefits {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .benefit-tag {
+            background: #e1ecf7;
+            color: var(--primary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Pricing Cards Container */
+        .pricing-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Individual Card */
+        .plan-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 280px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            position: relative;
+            border: 1px solid #eee;
+        }
+        
+        .plan-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        
+        /* Best Value Highlight */
+        .plan-card.popular {
+            border: 2px solid var(--primary);
+            transform: scale(1.05);
+        }
+        .popular-badge {
+            background: var(--primary);
+            color: white;
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .price { font-size: 2.5rem; color: var(--dark); font-weight: bold; margin: 20px 0; }
+        .period { font-size: 1rem; color: #999; font-weight: normal; }
+        
+        ul { list-style: none; padding: 0; text-align: left; margin-bottom: 30px; }
+        li { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        li::before { content: "✓"; color: var(--success); margin-right: 10px; font-weight: bold; }
+
+        .btn-buy {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: var(--dark);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .plan-card.popular .btn-buy { background: var(--primary); }
+        .btn-buy:hover { opacity: 0.9; }
+
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>Unlock Super Intelligence</h1>
+        <p>ByteBuddy AI runs on the advanced <strong>AI APIs</strong>. By upgrading, you support the server costs and get faster, smarter, and unlimited responses.</p>
+        
+        <div class="benefits">
+            <span class="benefit-tag">🚀 Faster Generation</span>
+            <span class="benefit-tag">🧠 Complex Reasoning</span>
+            <span class="benefit-tag">📚 Unlimited History</span>
+        </div>
+    </div>
+
+    <div class="pricing-container">
+        <div class="plan-card">
+            <h3>Monthly Plan</h3>
+            <div class="price">₹499<span class="period">/mo</span></div>
+            <ul>
+                <li>100M AI Tokens</li>
+                <li>Fast AI Responses</li>
+                <li>Large files Support</li>
+            </ul>
+            <a href="payment.html?plan=monthly&price=499" class="btn-buy">Choose Monthly</a>
+        </div>
+
+        <div class="plan-card popular">
+            <div class="popular-badge">MOST POPULAR</div>
+            <h3>Yearly Pro</h3>
+            <div class="price">₹4999<span class="period">/yr</span></div>
+            <ul>
+                <li><strong>Unlimited Tokens</strong></li>
+                <li>Enhanced Reasoning Model</li>
+                <li>Priority Support</li>
+                <li>Better And Generalized Answers</li>
+                <li>Better Learning & Assignment Helper</li>
+                <li>Save ₹More/year</li>
+            </ul>
+            <a href="payment.html?plan=yearly&price=1999" class="btn-buy">Choose Yearly</a>
+        </div>
+
+        <!--<div class="plan-card">
+            <h3>Exam Crunch</h3>
+            <div class="price">₹499<span class="period">/3 mo</span></div>
+            <ul>
+                <li>Perfect for Semesters</li>
+                <li>Project Helper Access</li>
+                <li>Code Debugging</li>
+            </ul>
+            <a href="payment.html?plan=exam&price=499" class="btn-buy">Choose Bundle</a>
+        </div>-->
+    </div>
+
+</body>
+</html>

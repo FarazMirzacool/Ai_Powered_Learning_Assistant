@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteBuddy AI - Login & Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="interface.css">
+    <style>
+        /* Add auth-specific styles here */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #121212 0%, #0a0a0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(106, 17, 203, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(37, 117, 252, 0.2) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .auth-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(106, 17, 203, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .auth-box:hover {
+            transform: translateY(-5px);
+            border-color: rgba(106, 17, 203, 0.6);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-logo-icon {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: var(--light);
+        }
+
+        .auth-subtitle {
+            color: #b0b0b0;
+            font-size: 1rem;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            color: var(--light);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-divider span {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 2rem;
+            color: #b0b0b0;
+        }
+
+        .auth-switch a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .auth-switch a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .auth-back {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 10;
+        }
+
+        .auth-back a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .auth-back a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background: rgba(46, 213, 115, 0.1);
+            color: var(--success);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .auth-box {
+                padding: 2rem;
+            }
+            
+            .auth-back {
+                top: 1rem;
+                left: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-back">
+            <a href="interface.html">
+                <i class="fas fa-arrow-left"></i>
+                Back to Home
+            </a>
+        </div>
+
+        <!-- Login Form -->
+        <div class="auth-box" id="loginForm">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="auth-logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="auth-logo-text">ByteBuddy AI</div>
+                </div>
+                <h2 class="auth-title">Welcome Back</h2>
+                <p class="auth-subtitle">Sign in to continue your learning journey</p>
+            </div>
+
+            <div class="error-message" id="loginError"></div>
+            <div class="success-message" id="loginSuccess"></div>
+
+            <form class="auth-form" id="loginFormElement">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email or Username</label>
+                    <input type="text" id="loginEmail" class="form-input" placeholder="Enter your email or username" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span id="loginBtnText">Sign In</span>
+                </button>
+
+                <div class="auth-divider">
+                    <span>New to ByteBuddy?</span>
+                </div>
+
+                <button type="button" class="btn btn-outline" onclick="showRegisterForm()">
+                    Create Account
+                </button>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-box" id="registerForm" style="display: none;">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="auth-logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="auth-logo-text">ByteBuddy AI</div>
+                </div>
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">Start your personalized learning journey today</p>
+            </div>
+
+            <div class="error-message" id="registerError"></div>
+            <div class="success-message" id="registerSuccess"></div>
+
+            <form class="auth-form" id="registerFormElement">
+                <div class="form-group">
+                    <label class="form-label" for="registerFullName">Full Name</label>
+                    <input type="text" id="registerFullName" class="form-input" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" class="form-input" placeholder="Choose a username" required>
+                    <small style="color: #b0b0b0; font-size: 0.8rem;">This will be your unique identifier</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="registerEmail">Email Address</label>
+                    <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" class="form-input" placeholder="Create a strong password" required>
+                    <small style="color: #b0b0b0; font-size: 0.8rem;">Minimum 6 characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="registerConfirmPassword">Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Confirm your password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span id="registerBtnText">Create Account</span>
+                </button>
+
+                <div class="auth-divider">
+                    <span>Already have an account?</span>
+                </div>
+
+                <button type="button" class="btn btn-outline" onclick="showLoginForm()">
+                    Sign In Instead
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        // Form switching
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            clearMessages();
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            clearMessages();
+        }
+
+        // Clear all messages
+        function clearMessages() {
+            document.querySelectorAll('.error-message, .success-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+        }
+
+        // Show message
+        function showMessage(elementId, message, isError = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.add('show');
+            
+            if (isError) {
+                element.style.display = 'block';
+                element.style.backgroundColor = 'rgba(255, 71, 87, 0.1)';
+                element.style.color = 'var(--error)';
+                element.style.border = '1px solid rgba(255, 71, 87, 0.2)';
+            } else {
+                element.style.display = 'block';
+                element.style.backgroundColor = 'rgba(46, 213, 115, 0.1)';
+                element.style.color = 'var(--success)';
+                element.style.border = '1px solid rgba(46, 213, 115, 0.2)';
+            }
+        }
+
+        // Login handler
+        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const emailOrUsername = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            
+            // Show loading
+            loginBtn.disabled = true;
+            loginBtnText.innerHTML = '<span class="loading"></span> Signing In...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ emailOrUsername, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Save token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    showMessage('loginSuccess', 'Login successful! Redirecting...', false);
+                    
+                    // Redirect to main interface
+                    setTimeout(() => {
+                        window.location.href = 'interface.html';
+                    }, 1500);
+                } else {
+                    showMessage('loginError', data.message || 'Login failed');
+                }
+            } catch (error) {
+                showMessage('loginError', 'Network error. Please try again.');
+            } finally {
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Sign In';
+            }
+        });
+
+        // Register handler
+        document.getElementById('registerFormElement').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const fullName = document.getElementById('registerFullName').value;
+            const registerBtn = document.getElementById('registerBtn');
+            const registerBtnText = document.getElementById('registerBtnText');
+            
+            // Validation
+            if (password !== confirmPassword) {
+                showMessage('registerError', 'Passwords do not match');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('registerError', 'Password must be at least 6 characters');
+                return;
+            }
+            
+            // Show loading
+            registerBtn.disabled = true;
+            registerBtnText.innerHTML = '<span class="loading"></span> Creating Account...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password, fullName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Save token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    showMessage('registerSuccess', 'Account created successfully! Redirecting...', false);
+                    
+                    // Redirect to main interface
+                    setTimeout(() => {
+                        window.location.href = 'interface.html';
+                    }, 1500);
+                } else {
+                    showMessage('registerError', data.message || 'Registration failed');
+                }
+            } catch (error) {
+                showMessage('registerError', 'Network error. Please try again.');
+            } finally {
+                // Reset button
+                registerBtn.disabled = false;
+                registerBtnText.textContent = 'Create Account';
+            }
+        });
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // User is already logged in, redirect to main interface
+                window.location.href = 'interface.html';
+            }
+            
+            // Check URL hash for register form
+            if (window.location.hash === '#register') {
+                showRegisterForm();
+            }
+        });
+    </script>
+</body>
+</html>

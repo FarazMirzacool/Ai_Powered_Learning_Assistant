@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Roadmap Generator</title>
+    <link rel="stylesheet" href="ai-learning.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <span>Ai-Carrer-Roadmap</span>
+            </div>
+            <button class="btn-nav" onclick="resetForm()">
+                <i class="fas fa-redo"></i> New Analysis
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Form Section -->
+        <section class="form-section">
+            <div class="container">
+                <div class="form-wrapper">
+                    <div class="form-header">
+                        <h1><i class="fas fa-road"></i> AI Career Roadmap Generator</h1>
+                        <p class="subtitle">Get personalized career guidance powered by AI</p>
+                    </div>
+                    
+                    <form id="careerForm">
+                        <div class="form-group">
+                            <label for="name"><i class="fas fa-user"></i> Your Name</label>
+                            <input type="text" id="name" placeholder="Enter your name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="field"><i class="fas fa-bullseye"></i> Target Career Field</label>
+                            <div class="field-grid" id="fieldGrid">
+                                <!-- Fields will be dynamically populated -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="current-skills"><i class="fas fa-code"></i> Your Current Skills</label>
+                            <div class="skills-input-container">
+                                <div class="skills-input-wrapper">
+                                    <input type="text" id="skill-input" placeholder="Type a skill and press Enter">
+                                    <button type="button" class="btn-add-skill" onclick="addSkill()">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                </div>
+                                <div class="selected-skills" id="selectedSkills">
+                                    <!-- Selected skills will appear here -->
+                                </div>
+                                <small class="hint">Press Enter or click Add to insert skills</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-line"></i> Experience Level</label>
+                            <div class="exp-buttons">
+                                <button type="button" class="exp-btn active" data-level="beginner">
+                                    <i class="fas fa-seedling"></i>
+                                    <span>Beginner</span>
+                                    <small>0-1 years</small>
+                                </button>
+                                <button type="button" class="exp-btn" data-level="intermediate">
+                                    <i class="fas fa-tree"></i>
+                                    <span>Intermediate</span>
+                                    <small>1-3 years</small>
+                                </button>
+                                <button type="button" class="exp-btn" data-level="advanced">
+                                    <i class="fas fa-mountain"></i>
+                                    <span>Advanced</span>
+                                    <small>3+ years</small>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-generate" id="generateBtn">
+                            <i class="fas fa-bolt"></i> Generate AI Career Roadmap
+                        </button>
+                        
+                        <div class="form-footer">
+                            <p><i class="fas fa-info-circle"></i> Using AI to analyze your profile and generate personalized guidance</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="results-section">
+            <div class="container">
+                <div class="results-header">
+                    <h2><i class="fas fa-map-marked-alt"></i> Your AI-Generated Career Roadmap</h2>
+                    <div class="user-profile" id="userProfile">
+                        <!-- User info will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Cards Container -->
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+                
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <div class="loading-content">
+                        <div class="spinner"></div>
+                        <h3>AI is analyzing your profile...</h3>
+                        <p>Generating personalized career roadmap</p>
+                        <div class="loading-steps">
+                            <div class="step active">
+                                <i class="fas fa-check"></i>
+                                <span>Analyzing skills</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-brain"></i>
+                                <span>AI processing</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-road"></i>
+                                <span>Creating roadmap</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="ai-learning.js"></script>
+</body>
+</html>

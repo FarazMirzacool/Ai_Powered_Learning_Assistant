@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteBuddy AI - Advanced Learning Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="interface.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self';
+               script-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+               font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+               connect-src 'self';
+               img-src 'self' data:;">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="logo-text">ByteBuddy AI</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Explore</a></li>
+                        <li><a href="subscription.html">Subscription</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons">
+                    <!-- Removed login/register buttons -->
+                    <button class="btn btn-primary" onclick="window.location.href='subscription.html'">Get Premium</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Revolutionize Your Learning with AI</h1>
+                <p>ByteBuddy AI combines cutting-edge artificial intelligence with cognitive science to create personalized learning experiences that adapt to your unique needs and goals.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-large" onclick="startLearning()">Start Learning Now</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number">94%</div>
+                        <div class="stat-label">Faster Learning</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">80%</div>
+                        <div class="stat-label">Better Learning</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Smart Learning</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">AI-Powered Learning Tools</h2>
+                    <p class="section-subtitle">Discover our suite of intelligent tools designed to enhance every aspect of your learning journey</p>
+                </div>
+                <div class="features-grid">
+                    <!-- AI Note Generator -->
+                    <div class="feature-card floating" data-feature="note-generator">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>AI Note Generator</h3>
+                        <p>Transform any learning material into organized, effective notes with our advanced AI processing.</p>
+                        <ul class="feature-list">
+                            <li>Summarize textnotes and articles</li>
+                            <li>Convert searched topics to structured notes</li>
+                            <li>Answer finder related to generated summaries from pdfs</li>
+                            <li>Provide text to speech functionality</li>
+                            <li>Using Ai models to make note generation fast</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='note-generator.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Doubt Solver -->
+                    <div class="feature-card floating" data-feature="doubt-solver">
+                        <div class="feature-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <h3>AI Doubt Solver</h3>
+                        <p>Get instant, step-by-step explanations for any academic question using text or visual input.</p>
+                        <ul class="feature-list">
+                            <li>Ask questions in natural language</li>
+                            <li>Upload images of problems (math, coding, circuits)</li>
+                            <li>Receive detailed, step-by-step solutions</li>
+                            <li>Multiple explanation styles for different needs</li>
+                            <li>Save solution history for later review</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='doubt-solver.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Quizzes -->
+                    <div class="feature-card floating" data-feature="quizzes">
+                        <div class="feature-icon">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>AI-Powered Interactive Quizzes</h3>
+                        <p>Reinforce your knowledge with adaptive quizzes that identify and target your weak areas.</p>
+                        <ul class="feature-list">
+                            <li>Auto-generated questions from your content</li>
+                            <li>Chapter-wise and topic-specific tests</li>
+                            <li>Adjustable difficulty levels</li>
+                            <li>Instant scoring and detailed feedback</li>
+                            <li>Performance tracking over time</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='quiz-generator.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+
+                    <!-- Resume & Career Assistant -->
+                    <div class="feature-card floating" data-feature="career-assistant">
+                        <div class="feature-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3>AI Resume Assistant</h3>
+                        <p>Prepare for your professional journey with AI-powered resume building and career guidance.</p>
+                        <ul class="feature-list">
+                            <li>AI-powered resume builder with optimization</li>
+                            <li>Personalized internship and job suggestions</li>
+                            <li>Skills gap analysis and recommendations</li>
+                            <li>Custom learning roadmap creation</li>
+                            <li>Automated cover letter generation</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='career-assistant.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+
+                    <!-- Habit & Mental Health Companion -->
+                    <div class="feature-card floating" data-feature="habit-tracker">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h3>AI Mental Health Companion</h3>
+                        <p>Maintain productivity and mental well-being with personalized tracking and insights.</p>
+                        <ul class="feature-list">
+                            <li>Daily mood and productivity tracking</li>
+                            <li>Study streak counter with milestones</li>
+                            <li>Personalized motivational insights</li>
+                            <li>Reflection journal with AI feedback</li>
+                            <li>Focus mode for distraction-free studying</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='mental-health-companion.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+
+                    <!-- Language Learning Tool -->
+                    <div class="feature-card floating" data-feature="language-tool">
+                        <div class="feature-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <h3>AI Career Assistant</h3>
+                        <p>Improve your learning skills for academic, professional, or personal growth.</p>
+                        <ul class="feature-list">
+                            <li>Raodmap generator for your domain</li>
+                            <li>Create Schedule for selected domain</li>
+                            <li>Suggest learning videos and documents, books</li>
+                            <li>Organize Contextual test</li>
+                            <li>Provide modules for further learning</li>
+                        </ul>
+                        <div class="feature-actions">
+                            <button class="btn btn-primary select-btn" onclick="window.location.href='ai-learning-tool.html'">Select Tool</button>
+                            <button class="btn btn-outline">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        </section>
+
+        <section class="selected-tool">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Select Suitable Learning Tool</h2>
+                    <p class="section-subtitle">Explore the capabilities of your chosen AI learning assistant</p>
+                </div>
+                <div id="tool-display">
+                    <div class="tool-content">
+                        <h3>ByteBuddy AI</h3>
+                        <p>Select any of our AI-powered learning tools to get started with your personalized educational journey. Each tool is designed to adapt to your learning style and help you achieve your goals faster and more effectively.</p>
+                        <div class="tool-actions">
+                            <!--<button class="action-btn primary-btn">Take a Tour</button>-->
+                            <button class="action-btn secondary-btn">View All Features</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h4>ByteBuddy AI</h4>
+                    <p>The future of personalized learning is here. Join thousands of students and professionals who are accelerating their growth with our AI-powered platform.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Products</h4>
+                    <ul class="footer-links">
+                        <li><a href="note-generator.html">AI Note Generator</a></li>
+                        <li><a href="doubt-solver.html">AI Doubt Solver</a></li>
+                        <li><a href="quiz-generator.html">Interactive Quizzes</a></li>
+                        <li><a href="career-assistant.html">Career Assistant</a></li>
+                        <li><a href="ai-learning-tool.html">AI Learning Tool</a></li>
+                        <li><a href="mental-health-companion.html">Mental Health Companion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Help Center</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ByteBuddy AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="interface.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>

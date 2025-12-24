@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Quiz Generator | Interactive Learning</title>
+    <link rel="stylesheet" href="/interface.css">
+    <link rel="stylesheet" href="/quiz-generator.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+    <!-- Unique Header -->
+    <header class="quiz-generator-header">
+        <nav class="quiz-generator-nav">
+            <a href="/interface.html" class="quiz-generator-logo">
+                <i class="fas fa-brain quiz-generator-logo-icon"></i>
+                <span class="quiz-generator-logo-text">AI Quiz Master</span>
+            </a>
+            
+            <a href="/interface.html" class="quiz-generator-back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </nav>
+    </header>
+
+    <!-- Welcome Banner -->
+    <div id="welcome-banner" class="welcome-banner" style="display: none;">
+        <div class="container">
+            <h3>Welcome, <span id="username-display">User</span>!</h3>
+            <p>Reinforce your knowledge with adaptive AI-powered quizzes</p>
+        </div>
+    </div>
+
+    <!-- Main Quiz Interface -->
+    <main class="quiz-main-container">
+        <div class="quiz-wrapper">
+            <div class="quiz-header">
+                <h1><i class="fas fa-graduation-cap quiz-icon"></i> AI Quiz Generator</h1>
+                <p class="quiz-description">Reinforce your knowledge with adaptive quizzes that identify and target your weak areas</p>
+            </div>
+
+            <!-- Quiz Creation Section -->
+            <div class="quiz-creation-section" id="quiz-creation">
+                <div class="creation-card">
+                    <h2><i class="fas fa-cogs"></i> Create Your Quiz</h2>
+                    <p class="card-description">Enter a topic and customize your quiz settings</p>
+                    
+                    <div class="quiz-settings">
+                        <!-- Topic Input -->
+                        <div class="setting-group">
+                            <label for="quiz-topic"><i class="fas fa-book"></i> Topic/Subject</label>
+                            <input type="text" id="quiz-topic" placeholder="Enter topic (e.g., Machine Learning, World War II, Organic Chemistry)">
+                            <div class="topic-examples">
+                                <span class="example-tag" data-topic="Artificial Intelligence">AI</span>
+                                <span class="example-tag" data-topic="Photosynthesis">Biology</span>
+                                <span class="example-tag" data-topic="Quantum Physics">Physics</span>
+                                <span class="example-tag" data-topic="French Revolution">History</span>
+                                <span class="example-tag" data-topic="JavaScript Programming">Programming</span>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Configuration -->
+                        <div class="settings-grid">
+                            <!-- Question Count -->
+                            <div class="setting-item">
+                                <label for="question-count"><i class="fas fa-list-ol"></i> Questions</label>
+                                <select id="question-count">
+                                    <option value="5" style="background-color: #b0b0b0; color: black;">5 Questions</option>
+                                    <option value="10" selected style="background-color: #b0b0b0; color: black;">10 Questions</option>
+                                    <option value="15" style="background-color: #b0b0b0; color: black;">15 Questions</option>
+                                    <option value="20" style="background-color: #b0b0b0; color: black;">20 Questions</option>
+                                </select>
+                            </div>
+
+                            <!-- Difficulty Level -->
+                            <div class="setting-item">
+                                <label for="difficulty"><i class="fas fa-chart-line"></i> Difficulty</label>
+                                <select id="difficulty">
+                                    <option value="easy" style="background-color: #b0b0b0; color: black;">Easy</option>
+                                    <option value="medium" selected style="background-color: #b0b0b0; color: black;">Medium</option>
+                                    <option value="hard" style="background-color: #b0b0b0; color: black;">Hard</option>
+                                    <option value="mixed" style="background-color: #b0b0b0; color: black;">Mixed Levels</option>
+                                </select>
+                            </div>
+
+                            <!-- Question Types -->
+                            <div class="setting-item">
+                                <label><i class="fas fa-question-circle"></i> Question Types</label>
+                                <div class="type-options">
+                                    <label class="type-option">
+                                        <input type="checkbox" name="question-type" value="mcq" checked>
+                                        <span class="type-label">
+                                            <i class="fas fa-dot-circle"></i>
+                                            <span>MCQ</span>
+                                        </span>
+                                    </label>
+                                    <label class="type-option">
+                                        <input type="checkbox" name="question-type" value="true-false">
+                                        <span class="type-label">
+                                            <i class="fas fa-check-double"></i>
+                                            <span>True/False</span>
+                                        </span>
+                                    </label>
+                                    <label class="type-option">
+                                        <input type="checkbox" name="question-type" value="fill-blank">
+                                        <span class="type-label">
+                                            <i class="fas fa-edit"></i>
+                                            <span>Fill in Blank</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Time Limit -->
+                            <div class="setting-item">
+                                <label for="time-limit"><i class="fas fa-clock"></i> Time Limit</label>
+                                <select id="time-limit">
+                                    <option value="0" style="background-color: #b0b0b0; color: black;">No Time Limit</option>
+                                    <option value="300" style="background-color: #b0b0b0; color: black;">5 Minutes</option>
+                                    <option value="600" selected style="background-color: #b0b0b0; color: black;">10 Minutes</option>
+                                    <option value="900" style="background-color: #b0b0b0; color: black;">15 Minutes</option>
+                                    <option value="1200" style="background-color: #b0b0b0; color: black;">20 Minutes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Additional Instructions -->
+                        <div class="setting-group">
+                            <label for="instructions"><i class="fas fa-lightbulb"></i> Additional Instructions (Optional)</label>
+                            <textarea id="instructions" placeholder="Any specific areas to focus on? (e.g., 'focus on formulas', 'include historical dates', 'practical applications')"></textarea>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <div class="generate-actions">
+                            <button class="btn btn-primary generate-btn" id="generate-quiz">
+                                <i class="fas fa-bolt"></i> Generate Quiz
+                            </button>
+                            <button class="btn btn-outline" id="quick-quiz">
+                                <i class="fas fa-rocket"></i> Quick Quiz (5 Questions)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Quizzes -->
+                <div class="recent-quizzes" id="recent-quizzes">
+                    <h3><i class="fas fa-history"></i> Recent Quizzes</h3>
+                    <div class="quizzes-list">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No recent quizzes yet</p>
+                            <p class="small">Your generated quizzes will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Taking Section -->
+            <div class="quiz-taking-section" id="quiz-taking" style="display: none;">
+                <div class="quiz-header-bar">
+                    <div class="quiz-info">
+                        <h2 id="quiz-title">Quiz Title</h2>
+                        <div class="quiz-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-question"></i>
+                                <span id="current-question">1</span>/<span id="total-questions">10</span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span id="timer">10:00</span>
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-trophy"></i>
+                                <span id="score">Score: 0</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="quiz-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-text">Progress: <span id="progress-percent">0%</span></div>
+                    </div>
+                </div>
+
+                <!-- Question Container -->
+                <div class="question-container" id="question-container">
+                    <!-- Questions will be dynamically inserted here -->
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="quiz-navigation">
+                    <button class="nav-btn" id="prev-btn" disabled>
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <div class="question-indicators" id="question-indicators">
+                        <!-- Question indicators will be dynamically inserted -->
+                    </div>
+                    <button class="nav-btn" id="next-btn">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Submit Quiz Button -->
+                <div class="submit-section" id="submit-section">
+                    <button class="btn btn-primary submit-btn" id="submit-quiz">
+                        <i class="fas fa-paper-plane"></i> Submit Quiz
+                    </button>
+                    <button class="btn btn-outline" id="pause-quiz">
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="quiz-results-section" id="quiz-results" style="display: none;">
+                <div class="results-header">
+                    <h2><i class="fas fa-chart-line"></i> Quiz Results</h2>
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span id="final-score">0</span>
+                            <span class="score-label">%</span>
+                        </div>
+                        <div class="score-details">
+                            <h3 id="result-title">Quiz Completed!</h3>
+                            <p id="result-message">Review your performance below</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Summary -->
+                <div class="performance-summary">
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="summary-value" id="correct-answers">0</div>
+                            <div class="summary-label">Correct</div>
+                        </div>
+                        <div class="summary-card">
+                            <i class="fas fa-times-circle"></i>
+                            <div class="summary-value" id="wrong-answers">0</div>
+                            <div class="summary-label">Wrong</div>
+                        </div>
+                        <div class="summary-card">
+                            <i class="fas fa-clock"></i>
+                            <div class="summary-value" id="time-taken">0:00</div>
+                            <div class="summary-label">Time Taken</div>
+                        </div>
+                        <div class="summary-card">
+                            <i class="fas fa-star"></i>
+                            <div class="summary-value" id="accuracy">0%</div>
+                            <div class="summary-label">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Review -->
+                <div class="question-review" id="question-review">
+                    <h3><i class="fas fa-list-ul"></i> Question Review</h3>
+                    <!-- Questions with answers will be dynamically inserted -->
+                </div>
+
+                <!-- Results Actions -->
+                <div class="results-actions">
+                    <button class="btn btn-primary" id="new-quiz">
+                        <i class="fas fa-plus"></i> New Quiz
+                    </button>
+                    <button class="btn btn-outline" id="save-results">
+                        <i class="fas fa-save"></i> Save Results
+                    </button>
+                    <button class="btn btn-outline" id="share-results">
+                        <i class="fas fa-share-alt"></i> Share
+                    </button>
+                </div>
+
+                <!-- Weak Areas -->
+                <div class="weak-areas" id="weak-areas">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Areas to Improve</h3>
+                    <div class="weakness-list">
+                        <!-- Weak areas will be dynamically inserted -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-section" id="loading-section" style="display: none;">
+                <div class="loading-content">
+                    <div class="loading-animation">
+                        <div class="pulse"></div>
+                        <i class="fas fa-brain loading-icon"></i>
+                    </div>
+                    <h3>Generating Your Quiz...</h3>
+                    <p class="loading-text">AI is creating personalized questions based on your topic and settings</p>
+                    <div class="loading-steps">
+                        <div class="step active">
+                            <span class="step-number">1</span>
+                            <span class="step-text">Analyzing topic</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <span class="step-text">Generating questions</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span class="step-text">Creating answer choices</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">4</span>
+                            <span class="step-text">Formatting quiz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why AI Quiz Generator?</h2>
+                <p class="section-subtitle">Advanced learning through intelligent assessment</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI-Powered Questions</h3>
+                    <p>Intelligent question generation based on your study material and learning level.</p>
+                    <ul class="feature-list">
+                        <li>Context-aware question creation</li>
+                        <li>Adaptive difficulty adjustment</li>
+                        <li>Varied question types</li>
+                        <li>Real-time feedback</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3>Targeted Learning</h3>
+                    <p>Identify and focus on your weak areas with personalized quiz recommendations.</p>
+                    <ul class="feature-list">
+                        <li>Weakness detection</li>
+                        <li>Progress tracking</li>
+                        <li>Personalized recommendations</li>
+                        <li>Performance analytics</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Comprehensive performance reports with actionable insights for improvement.</p>
+                    <ul class="feature-list">
+                        <li>Score tracking over time</li>
+                        <li>Question-wise analysis</li>
+                        <li>Time management insights</li>
+                        <li>Comparative analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h4>ByteBuddy AI</h4>
+                    <p>The future of personalized learning is here. Join thousands of students and professionals who are accelerating their growth with our AI-powered platform.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Products</h4>
+                    <ul class="footer-links">
+                        <li><a href="note-generator.html">AI Note Generator</a></li>
+                        <li><a href="#">Doubt Solver</a></li>
+                        <li><a href="#">Interactive Quizzes</a></li>
+                        <li><a href="#">Career Assistant</a></li>
+                        <li><a href="#">Language Tool</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Help Center</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ByteBuddy AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    <script src="quiz-generator.js"></script>
+    <script src="interface.js"></script>
+
+    <!-- Quiz Generator JavaScript (Integrated) -->
+</body>
+</html>

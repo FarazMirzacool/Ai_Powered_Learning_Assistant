@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Doubt Solver | Academic Assistant</title>
+    <link rel="stylesheet" href="interface.css">
+    <link rel="stylesheet" href="doubt-solver.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header (will be loaded from interface.html) -->
+    <!--<div id="header-container"></div>-->
+     <header class="doubt-solver-header">
+        <nav class="doubt-solver-nav">
+            <a href="/interface.html" class="doubt-solver-logo">
+                <i class="fas fa-brain doubt-solver-logo-icon"></i>
+                <span class="doubt-solver-logo-text">AI Doubt Solver</span>
+            </a>
+            
+            <a href="/interface.html" class="doubt-solver-back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </nav>
+    </header>
+
+    <!-- Welcome Banner (for logged-in users) -->
+    <div id="welcome-banner" class="welcome-banner" style="display: none;">
+        <div class="container">
+            <h3>Welcome back, <span id="username-display">User</span>!</h3>
+            <p>Get instant, step-by-step solutions to all your academic doubts</p>
+        </div>
+    </div>
+
+    <!-- Main Tool Interface -->
+    <main class="tool-container"  style="display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 40px 20px;">
+        <div class="container">
+            <div class="tool-header">
+                <h1><i class="fas fa-lightbulb tool-icon"></i> AI Doubt Solver</h1>
+                <p class="tool-description">Get instant, step-by-step explanations for any academic question using text or visual input</p>
+            </div>
+
+            <div class="tool-content" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+                <!-- Input Section -->
+                <div class="input-section">
+                    <div class="input-container">
+                        <div class="input-tabs">
+                            <button class="input-tab active" data-mode="text">
+                                <i class="fas fa-keyboard"></i> Text Input
+                            </button>
+                            <button class="input-tab" data-mode="image">
+                                <i class="fas fa-image"></i> Image Upload
+                            </button>
+                            <button class="input-tab" data-mode="handwriting">
+                                <i class="fas fa-pen"></i> Handwriting
+                            </button>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="input-area active" id="text-input">
+                            <div class="subject-selector">
+                                <label for="subject"><i class="fas fa-book"></i> Subject</label>
+                                <select id="subject">
+                                    <option value="general" style="color: rgb(0, 0, 0); background-color: antiquewhite;">General</option>
+                                    <option value="mathematics" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Mathematics</option>
+                                    <option value="physics" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Physics</option>
+                                    <option value="chemistry" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Chemistry</option>
+                                    <option value="biology" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Biology</option>
+                                    <option value="computer-science" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Computer Science</option>
+                                    <option value="engineering" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Engineering</option>
+                                    <option value="economics" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Economics</option>
+                                    <option value="other" style="color: rgb(0, 0, 0); background-color: antiquewhite;">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="question-input">
+                                <label for="question-text"><i class="fas fa-question-circle"></i> Your Question</label>
+                                <textarea id="question-text" placeholder="Type your question here... Be as detailed as possible for better results. Example: 'Explain how photosynthesis works step by step' or 'Solve: ∫(3x² + 2x - 5)dx from 0 to 4'"></textarea>
+                                <div class="char-count">Characters: <span id="char-count">0</span>/2000</div>
+                            </div>
+
+                            <div class="explanation-style">
+                                <label><i class="fas fa-graduation-cap"></i> Explanation Style</label>
+                                <div class="style-options">
+                                    <label class="style-option">
+                                        <input type="radio" name="style" value="detailed" checked>
+                                        <span class="style-label">
+                                            <i class="fas fa-list-ol"></i>
+                                            <span>Detailed Steps</span>
+                                        </span>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="style" value="simple">
+                                        <span class="style-label">
+                                            <i class="fas fa-bolt"></i>
+                                            <span>Simple Explanation</span>
+                                        </span>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="style" value="visual">
+                                        <span class="style-label">
+                                            <i class="fas fa-chart-bar"></i>
+                                            <span>Visual Approach</span>
+                                        </span>
+                                    </label>
+                                    <label class="style-option">
+                                        <input type="radio" name="style" value="advanced">
+                                        <span class="style-label">
+                                            <i class="fas fa-rocket"></i>
+                                            <span>Advanced Level</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="input-area" id="image-input">
+                            <div class="upload-area" id="upload-area">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <h3>Upload Image of Your Problem</h3>
+                                <p>Supports: Math equations, code snippets, circuit diagrams, chemical structures</p>
+                                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                                <button class="upload-btn" id="browse-btn">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>
+                                <p class="upload-note">or drag and drop here</p>
+                                <div class="supported-formats">
+                                    <span>JPG, PNG, PDF up to 10MB</span>
+                                </div>
+                            </div>
+
+                            <div class="preview-area" id="preview-area" style="display: none;">
+                                <div class="preview-header">
+                                    <h4><i class="fas fa-image"></i> Image Preview</h4>
+                                    <button class="btn-text" id="change-image">
+                                        <i class="fas fa-exchange-alt"></i> Change
+                                    </button>
+                                </div>
+                                <div class="image-preview" id="image-preview">
+                                    <!-- Image preview will be inserted here -->
+                                </div>
+                                <div class="image-info">
+                                    <div class="info-item">
+                                        <i class="fas fa-file-image"></i>
+                                        <span id="file-name">filename.jpg</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-weight"></i>
+                                        <span id="file-size">2.4 MB</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class="fas fa-tag"></i>
+                                        <select id="image-subject">
+                                            <option value="mathematics">Mathematics</option>
+                                            <option value="physics">Physics</option>
+                                            <option value="chemistry">Chemistry</option>
+                                            <option value="code">Programming/Coding</option>
+                                            <option value="diagram">Diagram/Graph</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Handwriting Input -->
+                        <div class="input-area" id="handwriting-input">
+                            <div class="canvas-container">
+                                <div class="canvas-header">
+                                    <h4><i class="fas fa-paint-brush"></i> Draw Your Problem</h4>
+                                    <div class="canvas-tools">
+                                        <button class="canvas-tool active" data-tool="pen">
+                                            <i class="fas fa-pen"></i> Pen
+                                        </button>
+                                        <button class="canvas-tool" data-tool="eraser">
+                                            <i class="fas fa-eraser"></i> Eraser
+                                        </button>
+                                        <input type="color" id="pen-color" value="#6a11cb">
+                                        <button class="canvas-tool" id="clear-canvas">
+                                            <i class="fas fa-trash"></i> Clear
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="canvas-wrapper">
+                                    <canvas id="drawing-canvas" width="800" height="400"></canvas>
+                                </div>
+                                <div class="canvas-controls">
+                                    <div class="pen-size">
+                                        <label>Pen Size:</label>
+                                        <input type="range" id="pen-size" min="1" max="10" value="3">
+                                        <span id="size-value">3</span>
+                                    </div>
+                                    <button class="upload-canvas" id="upload-canvas">
+                                        <i class="fas fa-paper-plane"></i> Solve This Drawing
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-actions">
+                            <button class="btn btn-primary solve-btn" id="solve-btn">
+                                <i class="fas fa-brain"></i> Solve My Doubt
+                            </button>
+                            <button class="btn btn-outline" id="clear-btn">
+                                <i class="fas fa-redo"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Questions (for logged-in users) -->
+                    <div class="recent-questions" id="recent-questions">
+                        <h3><i class="fas fa-history"></i> Recent Questions</h3>
+                        <div class="questions-list">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No recent questions yet</p>
+                                <p class="small">Your solved doubts will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="results-section" style="display: none;">
+                    <div class="results-header">
+                        <h2><i class="fas fa-check-circle"></i> Solution</h2>
+                        <div class="results-actions">
+                            <button class="btn-text" id="save-solution">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <button class="btn-text" id="export-solution">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button class="btn-text" id="new-question">
+                                <i class="fas fa-plus"></i> New Question
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="results-content">
+                        <!-- Solution will be dynamically inserted here -->
+                    </div>
+
+                    <div class="solution-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Solved just now</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-book"></i>
+                            <span id="solution-subject">Mathematics</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-lightbulb"></i>
+                            <span id="solution-style">Detailed Steps</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-section" id="loading-section" style="display: none;">
+                    <div class="loading-content">
+                        <div class="loading-animation">
+                            <div class="pulse"></div>
+                            <i class="fas fa-brain loading-icon"></i>
+                        </div>
+                        <h3>Analyzing Your Question...</h3>
+                        <p class="loading-text">Our AI is breaking down the problem and preparing step-by-step solutions</p>
+                        <div class="loading-steps">
+                            <div class="step active">
+                                <span class="step-number">1</span>
+                                <span class="step-text">Processing input</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2</span>
+                                <span class="step-text">Analyzing problem type</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3</span>
+                                <span class="step-text">Generating solutions</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4</span>
+                                <span class="step-text">Formatting explanation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How AI Doubt Solver Works</h2>
+                <p class="section-subtitle">Advanced AI technology to understand and solve complex academic problems</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Natural Language Understanding</h3>
+                    <p>Ask questions in plain English - no need for specific formatting or technical jargon.</p>
+                    <ul class="feature-list">
+                        <li>Understands context and intent</li>
+                        <li>Handles follow-up questions</li>
+                        <li>Supports multiple languages</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3>Visual Problem Recognition</h3>
+                    <p>Upload images of handwritten notes, textbook pages, or diagrams for instant analysis.</p>
+                    <ul class="feature-list">
+                        <li>OCR for handwritten text</li>
+                        <li>Equation and diagram recognition</li>
+                        <li>Code snippet analysis</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-list-ol"></i>
+                    </div>
+                    <h3>Step-by-Step Solutions</h3>
+                    <p>Get detailed breakdowns showing exactly how to arrive at the solution, not just the answer.</p>
+                    <ul class="feature-list">
+                        <li>Multiple solution methods</li>
+                        <li>Concept explanations</li>
+                        <li>Common mistakes highlighted</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h4>ByteBuddy AI</h4>
+                    <p>The future of personalized learning is here. Join thousands of students and professionals who are accelerating their growth with our AI-powered platform.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Products</h4>
+                    <ul class="footer-links">
+                        <li><a href="note-generator.html">AI Note Generator</a></li>
+                        <li><a href="#">Doubt Solver</a></li>
+                        <li><a href="#">Interactive Quizzes</a></li>
+                        <li><a href="#">Career Assistant</a></li>
+                        <li><a href="#">Language Tool</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Help Center</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ByteBuddy AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Footer (will be loaded from interface.html) -->
+    <div id="footer-container"></div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!--<script src="interface.js"></script>-->
+    <script src="doubt-solver.js"></script>
+</body>
+</html>

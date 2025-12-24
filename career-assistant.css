@@ -1,0 +1,169 @@
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --primary: #6a11cb;
+    --accent: #2575fc;
+    --text: #f1f5f9;
+    --sidebar: #111827;
+}
+
+body {
+    margin: 0; 
+    background-color: var(--bg); 
+    color: var(--text);
+    font-family: 'Segoe UI', Roboto, sans-serif; 
+    display: flex; 
+    height: 100vh;
+}
+
+/* Sidebar Styling */
+.sidebar { 
+    width: 240px; 
+    background: var(--sidebar); 
+    padding: 20px; 
+    border-right: 1px solid #334155; 
+}
+
+.sidebar-item { 
+    padding: 15px; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    margin-bottom: 10px; 
+    color: #94a3b8; 
+    transition: all 0.3s ease;
+}
+
+.sidebar-item:hover {
+    background: rgba(106, 17, 203, 0.1);
+    color: white;
+}
+
+.sidebar-item.active { 
+    background: var(--primary); 
+    color: white; 
+    box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+}
+
+/* Main Content Area */
+.main-content { 
+    flex: 1; 
+    padding: 40px; 
+    overflow-y: auto; 
+    background-color: var(--bg); /* White background ko block karne ke liye */
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards Styling */
+.card, .welcome-card { 
+    background: var(--card); 
+    padding: 30px; 
+    border-radius: 15px; 
+    margin-bottom: 20px; 
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ATS Score on Dashboard */
+.stat-value, .text-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    
+    /* 1. Chrome, Safari aur naye Edge browsers ke liye */
+    -webkit-background-clip: text; 
+    
+    /* 2. Standard property (Jo VS Code ki warning hatane ke liye zaroori hai) */
+    background-clip: text; 
+    
+    /* 3. Text ko transparent karna taaki piche ka gradient dikhe */
+    -webkit-text-fill-color: transparent;
+    
+    /* Fallback color agar gradient load na ho */
+    color: transparent; 
+}
+/* AI Results Box */
+.results-box { 
+    background: rgba(0, 0, 0, 0.25); 
+    padding: 25px; 
+    border-radius: 12px; 
+    border-left: 5px solid var(--primary); 
+    margin-top: 20px; 
+    white-space: pre-wrap; 
+    color: #cbd5e1;
+    line-height: 1.6;
+}
+
+/* Form Elements */
+input, textarea { 
+    width: 100%; 
+    padding: 12px; 
+    margin: 10px 0; 
+    background: #0f172a; 
+    border: 1px solid #334155; 
+    color: white; 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+    font-size: 14px;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Buttons */
+button, .btn-primary { 
+    background: linear-gradient(135deg, var(--primary), var(--accent)); 
+    color: white; 
+    border: none; 
+    padding: 14px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    width: 100%; 
+    font-size: 16px;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+button:hover { 
+    opacity: 0.9; 
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: white;
+    margin-top: 10px;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+}
+
+/* PDF.js rendering smooth fix */
+#analysisText {
+    font-size: 15px;
+}
+/* Gol-Gol ghumne wala animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+    margin-right: 8px; /* Text se thodi doori */
+}
+
+/* Button jab disabled ho tab ka style */
+button:disabled {
+    background: #475569 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Note Generator - NeuroLearn AI</title>
+    <link rel="stylesheet" href="note-generator.css">
+     <link rel="stylesheet" href="interface.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="note-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>ByteBuddy AI - Note Generator</span>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="interface.html"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="#" id="saveNoteBtn"><i class="fas fa-save"></i> Save</a></li>
+                        <li><a href="#" id="exportBtn"><i class="fas fa-download"></i> Export</a></li>
+                    </ul>
+                </nav>
+                <div class="user-controls">
+                    <button class="btn btn-outline" onclick="window.location.href='interface.html'">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="note-main">
+        <div class="container">
+            <div class="note-layout">
+                <!-- Left Panel - Input & Controls -->
+                <div class="left-panel">
+                    <div class="input-section">
+                        <h2><i class="fas fa-edit"></i> Generate Notes</h2>
+                        
+                        <!-- Topic Search -->
+                        <div class="input-card">
+                            <h3>1. Generate AI-Powered Notes</h3>
+                            <div class="ai-provider-info">
+                                <span class="ai-badge">
+                                    <i class="fas fa-robot"></i> Powered by ByteBuddy AI
+                                </span>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" id="topicInput" placeholder="Enter topic (e.g., Machine Learning, Quantum Physics, Shakespeare)">
+                                <button class="btn btn-primary" id="generateBtn">
+                                    <i class="fas fa-magic"></i> Generate Notes
+                                </button>
+                            </div>
+                            <div class="input-options">
+                                <label>Note Type:</label>
+                                <select id="noteType">
+                                    <option value="comprehensive" style="background-color: #b0b0b0; color: black;">Comprehensive Notes</option>
+                                    <option value="summary" style="background-color: #b0b0b0; color: black;">Brief Summary</option>
+                                    <option value="exam" style="background-color: #b0b0b0; color: black;">Exam Preparation</option>
+                                    <option value="mindmap" style="background-color: #b0b0b0; color: black;">Mind Map Structure</option>
+                                    <option value="flashcards" style="background-color: #b0b0b0; color: black;">Flashcards</option>
+                                </select>
+                                
+                                <label>Complexity Level:</label>
+                                <select id="complexityLevel">
+                                    <option value="beginner" style="background-color: #b0b0b0; color: black;">Beginner</option>
+                                    <option value="intermediate" style="background-color: #b0b0b0; color: black;">Intermediate</option>
+                                    <option value="advanced" style="background-color: #b0b0b0; color: black;">Advanced</option>
+                                    <option value="expert" style="background-color: #b0b0b0; color: black;">Expert</option>
+                                </select>
+                            </div>
+                            <div class="custom-prompt">
+                                <label>Custom Instructions (Optional):</label>
+                                <textarea id="customPrompt" placeholder="Add specific instructions for the AI..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- PDF Upload -->
+                        <div class="input-card">
+                            <h3>2. Upload & Analyze PDF</h3>
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop PDF file here</p>
+                                <p class="upload-sub">or click to browse</p>
+                                <input type="file" id="pdfUpload" accept=".pdf" hidden>
+                                <button class="btn btn-outline" onclick="document.getElementById('pdfUpload').click()">
+                                    Browse Files
+                                </button>
+                            </div>
+                            <div class="upload-info" id="uploadInfo" style="display: none;">
+                                <div class="file-info">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div>
+                                        <span id="fileName">file.pdf</span>
+                                        <span id="fileSize">0 KB</span>
+                                    </div>
+                                    <button class="btn-icon" onclick="removePDF()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pdf-actions" id="pdfActions" style="display: none;">
+                                <button class="btn btn-outline" id="summarizeBtn">
+                                    <i class="fas fa-file-contract"></i> Summarize PDF
+                                </button>
+                                <button class="btn btn-outline" id="extractBtn">
+                                    <i class="fas fa-key"></i> Extract Key Points
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ask Questions -->
+                        <div class="input-card" id="qaSection" style="display: none;">
+                            <h3>3. Ask Questions about PDF</h3>
+                            <div class="input-group">
+                                <input type="text" id="questionInput" placeholder="Ask a question about the PDF content...">
+                                <button class="btn btn-primary" id="askBtn">
+                                    <i class="fas fa-question-circle"></i> Ask AI
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Voice Controls -->
+                        <div class="input-card">
+                            <h3><i class="fas fa-volume-up"></i> Text-to-Speech</h3>
+                            <div class="voice-controls">
+                                <div class="voice-option">
+                                    <label>
+                                        <input type="checkbox" id="voiceEnabled" checked>
+                                        <span class="checkbox-label">Enable Text-to-Speech</span>
+                                    </label>
+                                </div>
+                                <div class="voice-speed">
+                                    <label>Speed:</label>
+                                    <input type="range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1">
+                                    <span id="speedValue">1x</span>
+                                </div>
+                                <div class="voice-buttons">
+                                    <button class="btn btn-outline" id="playBtn">
+                                        <i class="fas fa-play"></i> Play
+                                    </button>
+                                    <button class="btn btn-outline" id="pauseBtn">
+                                        <i class="fas fa-pause"></i> Pause
+                                    </button>
+                                    <button class="btn btn-outline" id="stopBtn">
+                                        <i class="fas fa-stop"></i> Stop
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Output & Results -->
+                <div class="right-panel">
+                    <div class="output-section">
+                        <div class="output-header">
+                            <h2><i class="fas fa-file-alt"></i> Generated Notes</h2>
+                            <div class="output-actions">
+                                <button class="btn btn-outline" id="clearBtn">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
+                                <div class="export-dropdown">
+                                    <button class="btn btn-primary" id="exportOptionsBtn">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a href="#" class="export-option" data-format="pdf">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                        <a href="#" class="export-option" data-format="doc">
+                                            <i class="fas fa-file-word"></i> Word
+                                        </a>
+                                        <a href="#" class="export-option" data-format="txt">
+                                            <i class="fas fa-file-alt"></i> Text
+                                        </a>
+                                        <a href="#" class="export-option" data-format="md">
+                                            <i class="fab fa-markdown"></i> Markdown
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div class="loading-state" id="loadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Generating notes with AI...</p>
+                            <p class="loading-sub">This may take a few moments</p>
+                        </div>
+
+                        <!-- AI Status -->
+                        <div class="ai-status" id="aiStatus">
+                            <span class="status-indicator active"></span>
+                            <span>AI Service Ready</span>
+                        </div>
+
+                        <!-- Notes Display -->
+                        <div class="notes-display" id="notesDisplay">
+                            <div class="empty-state">
+                                <i class="fas fa-lightbulb"></i>
+                                <h3>No Notes Generated Yet</h3>
+                                <p>Enter a topic or upload a PDF to generate AI-powered notes</p>
+                                <!--<button class="btn btn-outline" id="testAiBtn">
+                                    <i class="fas fa-vial"></i> Test AI Service
+                                </button>-->
+                            </div>
+                        </div>
+
+                        <!-- Q&A Results -->
+                        <div class="qa-results" id="qaResults" style="display: none;">
+                            <h3><i class="fas fa-comments"></i> Q&A Results</h3>
+                            <div id="qaContent"></div>
+                        </div>
+
+                        <!-- Mind Map Preview -->
+                        <div class="mindmap-section" id="mindmapSection" style="display: none;">
+                            <h3><i class="fas fa-project-diagram"></i> Mind Map Preview</h3>
+                            <div class="mindmap-container" id="mindmapContainer">
+                                <!-- Mind map will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+<section class="features" style="padding: 4rem 0; background: var(--darker);">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title" style="font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Powerful Features</h2>
+            <p class="section-subtitle" style="font-size: 1.2rem; color: #b0b0b0; max-width: 700px; margin: 0 auto;">Everything you need to create perfect study notes with AI assistance</p>
+        </div>
+        
+        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2.5rem; margin-top: 3rem;">
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.4s ease; position: relative; overflow: hidden; border: 1px solid rgba(106, 17, 203, 0.2); backdrop-filter: blur(10px);">
+                <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--light);">AI-Powered Generation</h3>
+                <p style="margin-bottom: 1.5rem; color: #b0b0b0; line-height: 1.6;">Advanced DeepSeek AI creates accurate, well-structured notes from any topic instantly.</p>
+                <ul class="feature-list" style="list-style: none; margin-bottom: 2rem;">
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Context-aware content</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Accurate information</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Multiple learning styles</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.4s ease; position: relative; overflow: hidden; border: 1px solid rgba(106, 17, 203, 0.2); backdrop-filter: blur(10px);">
+                <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--light);">Flexible Formats</h3>
+                <p style="margin-bottom: 1.5rem; color: #b0b0b0; line-height: 1.6;">Choose from 5 different note types tailored to your specific learning needs.</p>
+                <ul class="feature-list" style="list-style: none; margin-bottom: 2rem;">
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Comprehensive Guides</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Quick Summaries</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Mind Maps & Flashcards</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card" style="background: rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transition: all 0.4s ease; position: relative; overflow: hidden; border: 1px solid rgba(106, 17, 203, 0.2); backdrop-filter: blur(10px);">
+                <div class="feature-icon" style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-download"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--light);">Easy Export</h3>
+                <p style="margin-bottom: 1.5rem; color: #b0b0b0; line-height: 1.6;">Download notes in multiple formats or save them to your personal library.</p>
+                <ul class="feature-list" style="list-style: none; margin-bottom: 2rem;">
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ PDF & Markdown Export</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Cloud Storage</li>
+                    <li style="margin-bottom: 0.8rem; padding-left: 1.5rem; position: relative; color: #b0b0b0;">✓ Shareable Links</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Removed Settings Modal entirely -->
+     <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h4>ByteBuddy AI</h4>
+                    <p>The future of personalized learning is here. Join thousands of students and professionals who are accelerating their growth with our AI-powered platform.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Products</h4>
+                    <ul class="footer-links">
+                        <li><a href="note-generator.html">AI Note Generator</a></li>
+                        <li><a href="#">Doubt Solver</a></li>
+                        <li><a href="#">Interactive Quizzes</a></li>
+                        <li><a href="#">Career Assistant</a></li>
+                        <li><a href="#">Language Tool</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Help Center</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ByteBuddy AI. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Footer (will be loaded from interface.html) -->
+    <div id="footer-container"></div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script src="interface.js"></script>
+
+    <script src="note-generator.js"></script>
+</body>
+</html>
