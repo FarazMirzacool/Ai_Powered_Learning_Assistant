@@ -8,7 +8,7 @@ This project was designed to meet the need of a students who want to use ai in t
 # Improvements Required 2
 The UI need for refinement and improvements as it feels laggy due to uneven class and div distribution in css
 
-# Impro3ements Required 3
+# Improvements Required 3
 Though the backend is connected with MongoDb , the data the user generates using different tools needs for logic plus ai learning to help ai remember what user asked before and to followup
 
  
