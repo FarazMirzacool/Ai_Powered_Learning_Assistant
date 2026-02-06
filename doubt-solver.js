@@ -1,31 +1,37 @@
 // Doubt Solver JavaScript with OpenRouter API Integration
 document.addEventListener('DOMContentLoaded', function() {
-    // API Configuration
-    const OPENROUTER_API_KEY = "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";
+    // API Configuration - Using your new API key
+    const OPENROUTER_API_KEY = "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";
     const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
     
-    // Model mapping based on subject
+    // Model configuration - using reliable models from OpenRouter
     const MODEL_MAPPING = {
-        "mathematics": "mistralai/mistral-7b-instruct:free",
-        "physics": "mistralai/mistral-7b-instruct:free",
-        "chemistry": "mistralai/mistral-7b-instruct:free",
-        "biology": "mistralai/mistral-7b-instruct:free",
-        "computer-science": "mistralai/mistral-7b-instruct:free",
-        "engineering": "mistralai/mistral-7b-instruct:free",
-        "economics": "mistralai/mistral-7b-instruct:free",
-        "general": "mistralai/mistral-7b-instruct:free",
-        "other": "mistralai/mistral-7b-instruct:free"
+        "mathematics": "openai/gpt-3.5-turbo",
+        "physics": "openai/gpt-3.5-turbo",
+        "chemistry": "openai/gpt-3.5-turbo",
+        "biology": "openai/gpt-3.5-turbo",
+        "computer-science": "openai/gpt-3.5-turbo",
+        "engineering": "openai/gpt-3.5-turbo",
+        "economics": "openai/gpt-3.5-turbo",
+        "general": "openai/gpt-3.5-turbo",
+        "other": "openai/gpt-3.5-turbo",
+        "code": "openai/gpt-3.5-turbo",
+        "diagram": "openai/gpt-3.5-turbo"
     };
 
-    // DOM Elements
+    // Alternative models in case of failure
+    const ALTERNATIVE_MODELS = [
+        "meta-llama/llama-3.1-8b-instruct:free",
+        "google/gemma-2-2b-it:free",
+        "microsoft/phi-3.5-mini-instruct:free"
+    ];
+    //DOM Element
     const elements = {
-        // Tabs
         tabs: document.querySelectorAll('.input-tab'),
         textInput: document.getElementById('text-input'),
         imageInput: document.getElementById('image-input'),
         handwritingInput: document.getElementById('handwriting-input'),
-        
-        // Text Input
+        //Text Input
         subjectSelect: document.getElementById('subject'),
         questionText: document.getElementById('question-text'),
         charCount: document.getElementById('char-count'),
@@ -67,15 +73,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // User Elements
         welcomeBanner: document.getElementById('welcome-banner'),
-        usernameDisplay: document.getElementById('username-display')
+        usernameDisplay: document.getElementById('username-display'),
+        
+        // Recent Questions
+        recentQuestions: document.getElementById('recent-questions')
     };
 
-    // Canvas Drawing Variables
-    let canvasContext = null;
-    let isDrawing = false;
-    let currentTool = 'pen';
-    let lastX = 0;
-    let lastY = 0;
+    // State management
+    const state = {
+        currentTab: 'text',
+        isProcessing: false,
+        canvasContext: null,
+        isDrawing: false,
+        currentTool: 'pen',
+        lastX: 0,
+        lastY: 0,
+        loadingInterval: null,
+        currentModelIndex: 0
+    };
 
     // Initialize the application
     function init() {
@@ -83,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCanvas();
         checkUserLogin();
         updateCharCount();
+        testAPI();
     }
 
     // Check if user is logged in
@@ -131,12 +147,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let html = '';
         questions.slice(0, 5).forEach((q, index) => {
+            const subjectDisplay = q.subject.charAt(0).toUpperCase() + q.subject.slice(1);
+            const date = new Date(q.timestamp).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
             html += `
                 <div class="question-item" data-index="${index}">
-                    <div class="question-text">${q.question.substring(0, 80)}${q.question.length > 80 ? '...' : ''}</div>
+                    <div class="question-text">${escapeHtml(q.question.substring(0, 80))}${q.question.length > 80 ? '...' : ''}</div>
                     <div class="question-meta">
-                        <span class="subject">${q.subject}</span>
-                        <span class="date">${new Date(q.timestamp).toLocaleDateString()}</span>
+                        <span class="subject">${subjectDisplay}</span>
+                        <span class="date">${date}</span>
                     </div>
                 </div>
             `;
@@ -151,6 +175,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadQuestionFromHistory(questions[index]);
             });
         });
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Load question from history
@@ -170,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         showNotification('Question loaded from history', 'success');
+        elements.questionText.focus();
     }
 
     // Setup all event listeners
@@ -188,27 +220,33 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.changeImage.addEventListener('click', () => elements.imageUpload.click());
         
         // Drag and drop for image upload
-        elements.uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            elements.uploadArea.style.borderColor = 'var(--primary)';
-            elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.5)';
-        });
+        if (elements.uploadArea) {
+            elements.uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                elements.uploadArea.style.borderColor = 'var(--primary)';
+                elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.5)';
+            });
 
-        elements.uploadArea.addEventListener('dragleave', () => {
-            elements.uploadArea.style.borderColor = 'rgba(106, 17, 203, 0.3)';
-            elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.3)';
-        });
+            elements.uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                elements.uploadArea.style.borderColor = 'rgba(106, 17, 203, 0.3)';
+                elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.3)';
+            });
 
-        elements.uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            elements.uploadArea.style.borderColor = 'rgba(106, 17, 203, 0.3)';
-            elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.3)';
-            
-            if (e.dataTransfer.files.length) {
-                elements.imageUpload.files = e.dataTransfer.files;
-                handleImageUpload();
-            }
-        });
+            elements.uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                elements.uploadArea.style.borderColor = 'rgba(106, 17, 203, 0.3)';
+                elements.uploadArea.style.background = 'rgba(18, 18, 18, 0.3)';
+                
+                if (e.dataTransfer.files.length) {
+                    elements.imageUpload.files = e.dataTransfer.files;
+                    handleImageUpload();
+                }
+            });
+        }
 
         // Solve button
         elements.solveBtn.addEventListener('click', solveQuestion);
@@ -217,41 +255,72 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.clearBtn.addEventListener('click', clearAll);
 
         // Results actions
-        elements.saveSolution.addEventListener('click', saveSolution);
-        elements.exportSolution.addEventListener('click', exportSolution);
-        elements.newQuestion.addEventListener('click', showNewQuestion);
+        if (elements.saveSolution) {
+            elements.saveSolution.addEventListener('click', saveSolution);
+        }
+        if (elements.exportSolution) {
+            elements.exportSolution.addEventListener('click', exportSolution);
+        }
+        if (elements.newQuestion) {
+            elements.newQuestion.addEventListener('click', showNewQuestion);
+        }
 
         // Canvas tools
-        elements.canvasTools.forEach(tool => {
-            tool.addEventListener('click', () => {
-                elements.canvasTools.forEach(t => t.classList.remove('active'));
-                tool.classList.add('active');
-                currentTool = tool.dataset.tool;
+        if (elements.canvasTools) {
+            elements.canvasTools.forEach(tool => {
+                tool.addEventListener('click', () => {
+                    elements.canvasTools.forEach(t => t.classList.remove('active'));
+                    tool.classList.add('active');
+                    state.currentTool = tool.dataset.tool;
+                });
             });
-        });
+        }
 
-        elements.penSize.addEventListener('input', () => {
-            elements.sizeValue.textContent = elements.penSize.value;
-        });
+        if (elements.penSize) {
+            elements.penSize.addEventListener('input', () => {
+                elements.sizeValue.textContent = elements.penSize.value;
+                if (state.canvasContext) {
+                    state.canvasContext.lineWidth = elements.penSize.value;
+                }
+            });
+        }
 
-        elements.clearCanvas.addEventListener('click', clearCanvas);
-        elements.uploadCanvas.addEventListener('click', uploadCanvasDrawing);
+        if (elements.penColor) {
+            elements.penColor.addEventListener('input', () => {
+                if (state.canvasContext && state.currentTool === 'pen') {
+                    state.canvasContext.strokeStyle = elements.penColor.value;
+                }
+            });
+        }
+
+        if (elements.clearCanvas) {
+            elements.clearCanvas.addEventListener('click', clearCanvas);
+        }
+        if (elements.uploadCanvas) {
+            elements.uploadCanvas.addEventListener('click', uploadCanvasDrawing);
+        }
+
+        // Handle Enter key in textarea
+        elements.questionText.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                solveQuestion();
+            }
+        });
     }
 
     // Initialize canvas for drawing
     function initializeCanvas() {
         if (!elements.canvas) return;
         
-        canvasContext = elements.canvas.getContext('2d');
-        canvasContext.lineCap = 'round';
-        canvasContext.lineJoin = 'round';
-        canvasContext.strokeStyle = elements.penColor.value;
-        canvasContext.lineWidth = elements.penSize.value;
+        state.canvasContext = elements.canvas.getContext('2d');
+        setupCanvas();
         
-        // Set canvas size to match display
-        const canvasWrapper = elements.canvas.parentElement;
-        elements.canvas.width = canvasWrapper.clientWidth;
-        elements.canvas.height = 400;
+        // Set initial drawing properties
+        state.canvasContext.lineCap = 'round';
+        state.canvasContext.lineJoin = 'round';
+        state.canvasContext.strokeStyle = elements.penColor.value;
+        state.canvasContext.lineWidth = elements.penSize.value;
         
         // Drawing events
         elements.canvas.addEventListener('mousedown', startDrawing);
@@ -260,40 +329,57 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.canvas.addEventListener('mouseout', stopDrawing);
         
         // Touch events for mobile
-        elements.canvas.addEventListener('touchstart', handleTouchStart);
-        elements.canvas.addEventListener('touchmove', handleTouchMove);
+        elements.canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        elements.canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
         elements.canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    // Setup canvas dimensions
+    function setupCanvas() {
+        const canvasWrapper = elements.canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvasWrapper.getBoundingClientRect();
         
-        elements.penColor.addEventListener('input', () => {
-            if (currentTool === 'pen') {
-                canvasContext.strokeStyle = elements.penColor.value;
-            }
-        });
+        elements.canvas.width = rect.width * dpr;
+        elements.canvas.height = 400 * dpr;
+        
+        state.canvasContext.scale(dpr, dpr);
+        elements.canvas.style.width = `${rect.width}px`;
+        elements.canvas.style.height = '400px';
     }
 
     // Canvas drawing functions
     function startDrawing(e) {
-        isDrawing = true;
-        [lastX, lastY] = getCoordinates(e);
+        e.preventDefault();
+        state.isDrawing = true;
+        [state.lastX, state.lastY] = getCoordinates(e);
     }
 
     function draw(e) {
-        if (!isDrawing) return;
+        if (!state.isDrawing) return;
+        e.preventDefault();
         
-        canvasContext.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-        canvasContext.strokeStyle = currentTool === 'eraser' ? 'rgba(0,0,0,1)' : elements.penColor.value;
-        canvasContext.lineWidth = currentTool === 'eraser' ? elements.penSize.value * 2 : elements.penSize.value;
+        // Set drawing properties based on tool
+        if (state.currentTool === 'eraser') {
+            state.canvasContext.globalCompositeOperation = 'destination-out';
+            state.canvasContext.strokeStyle = 'rgba(0,0,0,1)';
+            state.canvasContext.lineWidth = elements.penSize.value * 3;
+        } else {
+            state.canvasContext.globalCompositeOperation = 'source-over';
+            state.canvasContext.strokeStyle = elements.penColor.value;
+            state.canvasContext.lineWidth = elements.penSize.value;
+        }
         
-        canvasContext.beginPath();
-        canvasContext.moveTo(lastX, lastY);
-        [lastX, lastY] = getCoordinates(e);
-        canvasContext.lineTo(lastX, lastY);
-        canvasContext.stroke();
+        state.canvasContext.beginPath();
+        state.canvasContext.moveTo(state.lastX, state.lastY);
+        [state.lastX, state.lastY] = getCoordinates(e);
+        state.canvasContext.lineTo(state.lastX, state.lastY);
+        state.canvasContext.stroke();
     }
 
     function stopDrawing() {
-        isDrawing = false;
-        canvasContext.beginPath();
+        state.isDrawing = false;
+        state.canvasContext.beginPath();
     }
 
     function getCoordinates(e) {
@@ -329,51 +415,68 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function clearCanvas() {
-        canvasContext.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+        if (state.canvasContext && elements.canvas) {
+            state.canvasContext.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+            showNotification('Canvas cleared', 'info');
+        }
     }
 
     // Switch between input tabs
     function switchTab(tabName) {
+        if (state.currentTab === tabName || state.isProcessing) return;
+        
         // Update active tab
         elements.tabs.forEach(tab => {
             tab.classList.toggle('active', tab.dataset.mode === tabName);
         });
 
         // Show active content
-        elements.textInput.classList.toggle('active', tabName === 'text');
-        elements.imageInput.classList.toggle('active', tabName === 'image');
-        elements.handwritingInput.classList.toggle('active', tabName === 'handwriting');
+        if (elements.textInput) elements.textInput.classList.toggle('active', tabName === 'text');
+        if (elements.imageInput) elements.imageInput.classList.toggle('active', tabName === 'image');
+        if (elements.handwritingInput) elements.handwritingInput.classList.toggle('active', tabName === 'handwriting');
+        
+        // Update state
+        state.currentTab = tabName;
 
         // Update solve button text based on tab
-        const buttonIcons = {
-            text: 'fas fa-brain',
-            image: 'fas fa-camera',
-            handwriting: 'fas fa-paint-brush'
+        const buttonConfig = {
+            text: { icon: 'fas fa-brain', text: 'Solve My Doubt' },
+            image: { icon: 'fas fa-camera', text: 'Solve from Image' },
+            handwriting: { icon: 'fas fa-paint-brush', text: 'Solve Drawing' }
         };
         
-        const buttonTexts = {
-            text: 'Solve My Doubt',
-            image: 'Solve from Image',
-            handwriting: 'Solve Drawing'
-        };
-
-        const icon = elements.solveBtn.querySelector('i');
-        icon.className = buttonIcons[tabName];
-        elements.solveBtn.innerHTML = `${icon.outerHTML} ${buttonTexts[tabName]}`;
+        const config = buttonConfig[tabName];
+        if (elements.solveBtn) {
+            elements.solveBtn.innerHTML = `<i class="${config.icon}"></i> ${config.text}`;
+        }
+        
+        // Reset canvas if switching to handwriting
+        if (tabName === 'handwriting') {
+            setTimeout(setupCanvas, 10); // Small delay to ensure DOM is updated
+        }
     }
 
     // Update character count
     function updateCharCount() {
+        if (!elements.charCount || !elements.questionText) return;
+        
         const count = elements.questionText.value.length;
         elements.charCount.textContent = count;
-        elements.charCount.style.color = count > 1900 ? 'var(--error)' : '#888';
+        elements.charCount.style.color = count > 1900 ? 'var(--error)' : 
+                                       count > 1500 ? 'var(--warning)' : '#888';
+        
+        // Disable solve button if too long
+        if (elements.solveBtn) {
+            elements.solveBtn.disabled = count > 2000;
+        }
     }
 
     // Handle image upload
     function handleImageUpload() {
+        if (!elements.imageUpload || !elements.imageUpload.files[0]) return;
+        
         const file = elements.imageUpload.files[0];
-        if (!file) return;
-
+        
         // Validate file size (10MB limit)
         if (file.size > 10 * 1024 * 1024) {
             showNotification('File size must be less than 10MB', 'error');
@@ -381,32 +484,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Validate file type
-        if (!file.type.match('image.*') && file.type !== 'application/pdf') {
-            showNotification('Please upload an image or PDF file', 'error');
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'application/pdf'];
+        if (!validTypes.includes(file.type)) {
+            showNotification('Please upload a valid image or PDF file (JPG, PNG, GIF, BMP, WebP, PDF)', 'error');
             return;
         }
 
         // Show preview
-        elements.uploadArea.style.display = 'none';
-        elements.previewArea.style.display = 'block';
+        if (elements.uploadArea) elements.uploadArea.style.display = 'none';
+        if (elements.previewArea) elements.previewArea.style.display = 'block';
         
-        elements.fileName.textContent = file.name;
-        elements.fileSize.textContent = formatFileSize(file.size);
+        if (elements.fileName) elements.fileName.textContent = file.name;
+        if (elements.fileSize) elements.fileSize.textContent = formatFileSize(file.size);
 
         if (file.type.match('image.*')) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                elements.imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                if (elements.imagePreview) {
+                    elements.imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; border-radius: 10px;">`;
+                }
+            };
+            reader.onerror = function() {
+                showNotification('Error loading image', 'error');
+                resetImageUpload();
             };
             reader.readAsDataURL(file);
-        } else {
-            elements.imagePreview.innerHTML = `
-                <div class="pdf-preview">
-                    <i class="fas fa-file-pdf" style="font-size: 5rem; color: var(--primary);"></i>
-                    <p>${file.name}</p>
-                </div>
-            `;
+        } else if (file.type === 'application/pdf') {
+            if (elements.imagePreview) {
+                elements.imagePreview.innerHTML = `
+                    <div class="pdf-preview" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-file-pdf" style="font-size: 4rem; color: var(--primary); margin-bottom: 10px;"></i>
+                        <p style="color: var(--text); font-weight: 500;">${file.name}</p>
+                        <p style="color: #888; font-size: 0.9rem;">PDF document</p>
+                    </div>
+                `;
+            }
         }
+        
+        showNotification('File uploaded successfully', 'success');
+    }
+
+    // Reset image upload
+    function resetImageUpload() {
+        if (!elements.imageUpload) return;
+        
+        elements.imageUpload.value = '';
+        if (elements.uploadArea) elements.uploadArea.style.display = 'block';
+        if (elements.previewArea) elements.previewArea.style.display = 'none';
+        if (elements.imagePreview) elements.imagePreview.innerHTML = '';
     }
 
     // Format file size
@@ -420,63 +545,103 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Upload canvas drawing
     async function uploadCanvasDrawing() {
-        if (!elements.canvas) return;
+        if (!elements.canvas || !state.canvasContext) return;
         
-        // Convert canvas to blob
-        elements.canvas.toBlob(async (blob) => {
-            if (!blob) {
-                showNotification('Failed to create image from drawing', 'error');
-                return;
-            }
-
-            showLoading();
-            
-            try {
-                // Convert blob to base64 for OCR
-                const base64Image = await blobToBase64(blob);
+        // Check if canvas has any drawing
+        const imageData = state.canvasContext.getImageData(0, 0, elements.canvas.width, elements.canvas.height);
+        const isEmpty = !imageData.data.some(channel => channel !== 0);
+        
+        if (isEmpty) {
+            showNotification('Please draw something first', 'warning');
+            return;
+        }
+        
+        showLoading();
+        setProcessingState(true);
+        
+        try {
+            // Convert canvas to blob
+            elements.canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    throw new Error('Failed to create image from drawing');
+                }
                 
-                // For now, we'll simulate OCR with a placeholder
-                // In production, you would send this to an OCR API
-                const extractedText = "This is a simulated OCR result. In production, integrate with Tesseract.js or similar.";
-                
-                // Use the extracted text as question
-                const subject = elements.subjectSelect.value;
-                const style = document.querySelector('input[name="style"]:checked').value;
-                
-                await getAIResponse(extractedText, subject, style, 'handwriting');
-                
-            } catch (error) {
-                console.error('Error processing drawing:', error);
-                showNotification('Failed to process drawing. Please try again.', 'error');
-                hideLoading();
-            }
-        }, 'image/png');
-    }
-
-    // Convert blob to base64
-    function blobToBase64(blob) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+                try {
+                    // For handwritten input, we'll ask the user to describe the problem
+                    const extractedText = "Handwritten problem detected. Please describe your problem in the text box and switch to the text input tab for a more accurate solution. You can describe what you drew, such as 'I drew a triangle with sides 3, 4, and 5' or 'This is a chemical structure diagram'.";
+                    
+                    showNotification(extractedText, 'info');
+                    
+                    // Switch to text tab and populate with prompt
+                    switchTab('text');
+                    elements.questionText.value = "I have a handwritten/drawn problem: ";
+                    elements.questionText.focus();
+                    updateCharCount();
+                    
+                    setProcessingState(false);
+                    hideLoading();
+                    
+                } catch (error) {
+                    console.error('Error processing drawing:', error);
+                    showNotification('Failed to process drawing. Please try typing your question instead.', 'error');
+                    setProcessingState(false);
+                    hideLoading();
+                }
+            }, 'image/png', 0.8);
+        } catch (error) {
+            console.error('Error converting canvas to blob:', error);
+            showNotification('Failed to process drawing', 'error');
+            setProcessingState(false);
+            hideLoading();
+        }
     }
 
     // Main function to solve question
     async function solveQuestion() {
-        const currentTab = document.querySelector('.input-tab.active').dataset.mode;
+        if (state.isProcessing) return;
         
-        switch(currentTab) {
-            case 'text':
-                await solveTextQuestion();
-                break;
-            case 'image':
-                await solveImageQuestion();
-                break;
-            case 'handwriting':
-                await uploadCanvasDrawing();
-                break;
+        const currentTab = state.currentTab;
+        
+        // Validation based on tab
+        if (currentTab === 'text') {
+            const question = elements.questionText.value.trim();
+            if (!question) {
+                showNotification('Please enter your question', 'error');
+                return;
+            }
+            if (question.length < 10) {
+                showNotification('Please provide more details in your question (minimum 10 characters)', 'warning');
+                return;
+            }
+            if (question.length > 2000) {
+                showNotification('Question is too long (maximum 2000 characters)', 'error');
+                return;
+            }
+        } else if (currentTab === 'image') {
+            if (!elements.imageUpload || !elements.imageUpload.files[0]) {
+                showNotification('Please upload an image first', 'error');
+                return;
+            }
+        }
+        
+        setProcessingState(true);
+        
+        try {
+            switch(currentTab) {
+                case 'text':
+                    await solveTextQuestion();
+                    break;
+                case 'image':
+                    await solveImageQuestion();
+                    break;
+                case 'handwriting':
+                    await uploadCanvasDrawing();
+                    break;
+            }
+        } catch (error) {
+            console.error('Error solving question:', error);
+            showNotification('An unexpected error occurred. Please try again.', 'error');
+            setProcessingState(false);
         }
     }
 
@@ -484,18 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function solveTextQuestion() {
         const question = elements.questionText.value.trim();
         const subject = elements.subjectSelect.value;
-        const style = document.querySelector('input[name="style"]:checked').value;
-        
-        // Validation
-        if (!question) {
-            showNotification('Please enter your question', 'error');
-            return;
-        }
-        
-        if (question.length < 10) {
-            showNotification('Please provide more details in your question', 'warning');
-            return;
-        }
+        const style = document.querySelector('input[name="style"]:checked')?.value || 'detailed';
         
         showLoading();
         
@@ -504,6 +658,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error solving question:', error);
             showNotification('Failed to get solution. Please try again.', 'error');
+            setProcessingState(false);
             hideLoading();
         }
     }
@@ -514,45 +669,57 @@ document.addEventListener('DOMContentLoaded', function() {
         const subject = elements.imageSubject.value;
         const style = 'detailed'; // Default for image questions
         
-        if (!file) {
-            showNotification('Please upload an image first', 'error');
-            return;
-        }
-        
         showLoading();
         
         try {
-            // For now, we'll simulate OCR
-            // In production, integrate with Tesseract.js
-            const extractedText = "This is a simulated OCR result from image. In production, integrate with Tesseract.js API.";
+            // For image input without OCR, we'll ask for description
+            const extractedText = `I have uploaded an image of a ${subject} problem. Since image analysis requires OCR, please describe your problem in detail. For example: "The image shows a math equation: 2x + 5 = 15" or "There's a physics diagram showing forces on an inclined plane."`;
             
-            await getAIResponse(extractedText, subject, style, 'image');
+            showNotification('Image uploaded. Please describe the problem in detail for accurate solution.', 'info');
+            
+            // Switch to text tab and populate with prompt
+            switchTab('text');
+            elements.questionText.value = `Image of ${subject} problem: `;
+            elements.questionText.focus();
+            updateCharCount();
+            
+            setProcessingState(false);
+            hideLoading();
             
         } catch (error) {
             console.error('Error solving image question:', error);
-            showNotification('Failed to process image. Please try again.', 'error');
+            showNotification('Failed to process image. Please try typing your question instead.', 'error');
+            setProcessingState(false);
             hideLoading();
         }
     }
 
     // Get AI response from OpenRouter API
     async function getAIResponse(question, subject, style, inputType) {
-        const model = MODEL_MAPPING[subject] || MODEL_MAPPING.general;
+        // Get model based on subject
+        const primaryModel = MODEL_MAPPING[subject] || MODEL_MAPPING.general;
         
-        // Prepare system prompt based on style and subject
-        const systemPrompt = getSystemPrompt(subject, style, inputType);
+        // Prepare system prompt
+        const systemPrompt = getSystemPrompt(subject, style, inputType, question);
         
         try {
+            console.log('Sending request to OpenRouter API...');
+            console.log('Model:', primaryModel);
+            console.log('Subject:', subject);
+            console.log('Style:', style);
+            console.log('Input type:', inputType);
+            console.log('Question length:', question.length);
+            
             const response = await fetch(OPENROUTER_API_URL, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.origin,
+                    'HTTP-Referer': window.location.origin || 'https://doubt-solver.com',
                     'X-Title': 'AI Doubt Solver'
                 },
                 body: JSON.stringify({
-                    model: model,
+                    model: primaryModel,
                     messages: [
                         {
                             role: 'system',
@@ -564,61 +731,174 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     ],
                     max_tokens: 2000,
-                    temperature: 0.7
+                    temperature: 0.7,
+                    stream: false
                 })
             });
 
+            console.log('API Response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
+                const errorText = await response.text();
+                console.error('API Error response:', errorText);
+                let errorMessage = `API request failed with status ${response.status}`;
+                
+                try {
+                    const errorData = JSON.parse(errorText);
+                    if (errorData.error && errorData.error.message) {
+                        errorMessage = errorData.error.message;
+                    }
+                } catch (e) {
+                    // If response is not JSON, use the text
+                }
+                
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
+            console.log('API Success response:', data);
             
-            if (data.choices && data.choices[0]) {
+            if (data.choices && data.choices[0] && data.choices[0].message) {
                 const solution = data.choices[0].message.content;
+                console.log('Generated solution length:', solution.length);
+                
                 displaySolution(solution, subject, style, inputType);
                 
                 // Save to recent questions if user is logged in
                 saveToRecentQuestions(question, subject, style, solution);
             } else {
-                throw new Error('No response from AI');
+                throw new Error('Invalid response format from AI');
             }
             
         } catch (error) {
             console.error('API Error:', error);
             
-            // Fallback to mock response if API fails
-            const mockResponse = getMockResponse(question, subject, style);
-            displaySolution(mockResponse, subject, style, inputType);
+            // Check for specific API errors
+            if (error.message.includes('401') || error.message.includes('403')) {
+                showNotification('API authentication failed. Please check your API key.', 'error');
+                await tryAlternativeModels(question, subject, style, inputType);
+            } else if (error.message.includes('429')) {
+                showNotification('Rate limit exceeded. Please try again in a few moments.', 'warning');
+                await tryAlternativeModels(question, subject, style, inputType);
+            } else if (error.message.includes('model') || error.message.includes('unavailable')) {
+                showNotification('The AI model is currently unavailable. Trying alternative...', 'warning');
+                await tryAlternativeModels(question, subject, style, inputType);
+            } else {
+                showNotification(`Failed to get AI response: ${error.message}`, 'error');
+                await tryAlternativeModels(question, subject, style, inputType);
+            }
+        } finally {
+            setProcessingState(false);
         }
     }
 
+    // Try alternative models if primary fails
+    async function tryAlternativeModels(question, subject, style, inputType) {
+        showNotification('Trying alternative AI models...', 'info');
+        
+        for (let i = state.currentModelIndex; i < ALTERNATIVE_MODELS.length; i++) {
+            const model = ALTERNATIVE_MODELS[i];
+            try {
+                console.log(`Trying alternative model ${i + 1}: ${model}`);
+                
+                const systemPrompt = getSystemPrompt(subject, style, inputType, question);
+                
+                const response = await fetch(OPENROUTER_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.origin || 'https://doubt-solver.com',
+                        'X-Title': 'AI Doubt Solver'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            {
+                                role: 'user',
+                                content: question
+                            }
+                        ],
+                        max_tokens: 1500,
+                        temperature: 0.7,
+                        stream: false
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        const solution = data.choices[0].message.content;
+                        displaySolution(solution, subject, style, inputType);
+                        saveToRecentQuestions(question, subject, style, solution);
+                        state.currentModelIndex = i; // Remember successful model
+                        showNotification(`Successfully used ${model.split('/')[0]} model`, 'success');
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error(`Alternative model ${model} failed:`, error);
+                continue; // Try next model
+            }
+        }
+        
+        // If all models fail, show mock response
+        showNotification('All AI models failed. Showing example solution format.', 'warning');
+        const mockResponse = getMockResponse(question, subject, style);
+        displaySolution(mockResponse, subject, style, inputType);
+    }
+
     // Get system prompt for AI
-    function getSystemPrompt(subject, style, inputType) {
+    function getSystemPrompt(subject, style, inputType, question) {
         const styleInstructions = {
-            'detailed': 'Provide a detailed step-by-step explanation. Break down each step clearly.',
-            'simple': 'Provide a simple, easy-to-understand explanation. Avoid technical jargon.',
-            'visual': 'Use visual analogies and describe how things would look. Mention diagrams if helpful.',
-            'advanced': 'Provide an advanced, in-depth explanation suitable for college-level understanding.'
+            'detailed': 'Provide a detailed step-by-step explanation. Break down each step clearly with explanations for why each step is taken.',
+            'simple': 'Provide a simple, easy-to-understand explanation. Avoid technical jargon and use everyday language.',
+            'visual': 'Use visual analogies and describe how things would look. Mention diagrams or visual representations if helpful.',
+            'advanced': 'Provide an advanced, in-depth explanation suitable for college-level or expert understanding.'
         };
 
-        const inputTypeNote = inputType === 'image' ? 
-            'The user uploaded an image of their problem. Describe what you see and provide a solution.' :
-            inputType === 'handwriting' ?
-            'The user drew their problem. Interpret the drawing and provide a solution.' :
-            '';
+        const subjectExpertise = {
+            'mathematics': 'Expert mathematician',
+            'physics': 'Expert physicist',
+            'chemistry': 'Expert chemist',
+            'biology': 'Expert biologist',
+            'computer-science': 'Expert computer scientist',
+            'engineering': 'Expert engineer',
+            'economics': 'Expert economist',
+            'general': 'Expert tutor',
+            'other': 'Knowledgeable expert',
+            'code': 'Expert programmer',
+            'diagram': 'Expert analyst'
+        };
 
-        return `You are an expert ${subject} tutor. ${styleInstructions[style]} 
-        
-        Important guidelines:
-        1. Always show your work and reasoning
-        2. Use clear, organized formatting
-        3. Highlight key concepts
-        4. Check your calculations
-        5. Provide final answer clearly
-        6. ${inputTypeNote}
-        
-        Format your response with clear sections using markdown-like formatting.`;
+        // Safely handle question parameter
+        const questionPreview = question ? `"${question.substring(0, 200)}${question.length > 200 ? '...' : ''}"` : 'the user\'s question';
+
+        return `You are an ${subjectExpertise[subject] || 'expert tutor'} helping a student with their doubt.
+
+${styleInstructions[style] || styleInstructions.detailed}
+
+Important guidelines for your response:
+1. Start with understanding the problem
+2. Break down the solution into clear, logical steps
+3. Explain the concepts behind each step
+4. Provide the final answer clearly
+5. Include relevant formulas, equations, or code where applicable
+6. Use clear formatting with headings, bullet points, and numbered steps
+7. Check for correctness and clarity
+
+Format your response using markdown-like formatting:
+- Use ## for main sections
+- Use ### for subsections
+- Use **bold** for important terms
+- Use bullet points for lists
+- Use code blocks \`\`\` for equations or code
+
+The user's question is: ${questionPreview}`;
     }
 
     // Display solution
@@ -626,97 +906,198 @@ document.addEventListener('DOMContentLoaded', function() {
         hideLoading();
         
         // Update metadata
-        elements.solutionSubject.textContent = subject.charAt(0).toUpperCase() + subject.slice(1);
-        elements.solutionStyle.textContent = style.charAt(0).toUpperCase() + style.slice(1);
+        if (elements.solutionSubject) {
+            elements.solutionSubject.textContent = subject.charAt(0).toUpperCase() + subject.slice(1);
+        }
+        if (elements.solutionStyle) {
+            elements.solutionStyle.textContent = style.charAt(0).toUpperCase() + style.slice(1);
+        }
         
         // Format and display solution
         const formattedSolution = formatSolution(solution);
-        elements.resultsContent.innerHTML = formattedSolution;
+        if (elements.resultsContent) {
+            elements.resultsContent.innerHTML = formattedSolution;
+        }
         
         // Show results section
-        elements.resultsSection.style.display = 'block';
-        
-        // Scroll to results
-        elements.resultsSection.scrollIntoView({ behavior: 'smooth' });
+        if (elements.resultsSection) {
+            elements.resultsSection.style.display = 'block';
+            
+            // Scroll to results
+            setTimeout(() => {
+                elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
         
         showNotification('Solution generated successfully!', 'success');
     }
 
     // Format solution with better styling
     function formatSolution(solution) {
+        if (!solution) return '<p>No solution generated.</p>';
+        
         // Convert markdown-like formatting to HTML
         let formatted = solution
             // Headers
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
             .replace(/^# (.*$)/gim, '<h1>$1</h1>')
             
-            // Bold
+            // Bold and italic
+            .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            
-            // Italic
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             
-            // Lists
-            .replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>')
-            .replace(/^[-*]\s+(.*$)/gim, '<li>$1</li>')
-            
-            // Code blocks
+            // Code blocks with language
+            .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
             .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             
-            // Line breaks
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
+            // Lists
+            .replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>')
+            .replace(/^[-*+]\s+(.*$)/gim, '<li>$1</li>')
+            
+            // Horizontal rule
+            .replace(/^---$/gim, '<hr>')
+            
+            // Blockquotes
+            .replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>');
         
-        // Wrap in paragraphs if not already
-        if (!formatted.includes('<h') && !formatted.includes('<pre')) {
-            formatted = formatted.split('</p><p>').map(p => {
-                if (!p.startsWith('<')) return `<p>${p}</p>`;
-                return p;
-            }).join('');
+        // Wrap list items
+        formatted = formatted.replace(/(<li>.*<\/li>)+/gms, (match) => {
+            // Check if it's ordered (starts with number)
+            const isOrdered = match.match(/<li>\d+\./);
+            const tag = isOrdered ? 'ol' : 'ul';
+            return `<${tag}>${match}</${tag}>`;
+        });
+        
+        // Handle paragraphs
+        const lines = formatted.split('\n');
+        let inParagraph = false;
+        let result = [];
+        
+        for (let line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) {
+                if (inParagraph) {
+                    result.push('</p>');
+                    inParagraph = false;
+                }
+                continue;
+            }
+            
+            if (trimmed.startsWith('<') && 
+                !trimmed.startsWith('<li>') && 
+                !trimmed.startsWith('<code>') && 
+                !trimmed.startsWith('<pre>') &&
+                !trimmed.startsWith('<h') &&
+                !trimmed.startsWith('<blockquote>') &&
+                !trimmed.startsWith('<hr>')) {
+                if (inParagraph) {
+                    result.push('</p>');
+                }
+                result.push(line);
+                inParagraph = false;
+            } else if (!trimmed.startsWith('<') || trimmed.startsWith('<li>')) {
+                if (!inParagraph) {
+                    result.push('<p>');
+                    inParagraph = true;
+                }
+                result.push(line);
+            } else {
+                if (inParagraph) {
+                    result.push('</p>');
+                    inParagraph = false;
+                }
+                result.push(line);
+            }
         }
         
+        if (inParagraph) {
+            result.push('</p>');
+        }
+        
+        formatted = result.join('\n');
+        
         // Add math formatting
-        formatted = formatted.replace(/(\$\$?[^\$]+\$\$?)/g, '<span class="math">$1</span>');
+        formatted = formatted.replace(/\$(.*?)\$/g, '<span class="math">$$1$</span>');
+        
+        // Clean up any empty paragraphs
+        formatted = formatted.replace(/<p>\s*<\/p>/g, '');
         
         return formatted;
     }
 
-    // Get mock response for testing
+    // Get mock response for testing or fallback
     function getMockResponse(question, subject, style) {
-        return `## Solution to Your ${subject.charAt(0).toUpperCase() + subject.slice(1)} Question
+        const subjects = {
+            'mathematics': 'Mathematics',
+            'physics': 'Physics',
+            'chemistry': 'Chemistry',
+            'biology': 'Biology',
+            'computer-science': 'Computer Science',
+            'engineering': 'Engineering',
+            'economics': 'Economics',
+            'general': 'General Knowledge',
+            'other': 'Academic'
+        };
+        
+        const subjectName = subjects[subject] || subject;
+        const shortQuestion = question.length > 100 ? question.substring(0, 100) + '...' : question;
+        
+        return `## Solution to Your ${subjectName} Question
 
 ### **Problem Analysis**
-${question}
+You asked: "${shortQuestion}"
 
-### **Step-by-Step Solution**
+This is a ${subject} problem. Here's how I would approach solving it:
 
-**Step 1: Understanding the Problem**
-- First, we identify the key components of the problem
-- Determine what is being asked
+### **Step-by-Step Solution Approach**
 
-**Step 2: Applying Relevant Concepts**
-- Use appropriate ${subject} concepts
-- Break down into manageable parts
+**Step 1: Understand the Problem**
+- Read the problem carefully
+- Identify what is being asked
+- Note down all given information
+- Determine which ${subjectName} concepts apply
 
-**Step 3: Calculations & Reasoning**
-- Show all calculations clearly
-- Explain each step in detail
+**Step 2: Plan Your Approach**
+- Decide on the method to use
+- Break the problem into smaller parts
+- Recall relevant formulas or theorems
+- Consider multiple approaches if possible
 
-**Step 4: Verification**
-- Check if the solution makes sense
+**Step 3: Execute the Solution**
+- Show all calculations step by step
+- Explain each logical step
+- Check units and dimensions
+- Verify intermediate results
+
+**Step 4: Verify Your Answer**
+- Check if the answer makes sense
 - Verify calculations
+- Consider alternative methods
+- Review common mistakes
 
-### **Final Answer**
-The solution is: **[Your Answer Here]**
+### **Key Concepts**
+- **Concept 1**: Fundamental principle in ${subjectName}
+- **Concept 2**: Related theory or formula
+- **Concept 3**: Problem-solving technique specific to this subject
 
-### **Key Concepts Learned**
-- Concept 1: Important principle
-- Concept 2: Related theory
-- Concept 3: Application method
+### **Example Format for ${subjectName} Solutions**
+1. **Given**: [State the given information]
+2. **Required**: [State what needs to be found]
+3. **Solution Approach**: [Describe your method]
+4. **Step-by-Step Calculation**: [Show detailed working]
+5. **Answer**: [Present final answer with units]
 
-*Note: This is a mock response. In production, this would be generated by the AI.*`;
+### **Practice Tips**
+1. Understand the underlying concepts, not just formulas
+2. Practice similar problems regularly
+3. Check your work systematically
+4. Review mistakes to learn from them
+
+*Note: This is a structured solution format. With a working API connection, you would receive a specific, detailed solution to your exact question.*`;
     }
 
     // Save to recent questions
@@ -746,8 +1127,10 @@ The solution is: **[Your Answer Here]**
             
             localStorage.setItem(`recent_questions_${userId}`, JSON.stringify(recentQuestions));
             
-            // Refresh display
-            displayRecentQuestions(recentQuestions);
+            // Refresh display if user is on this page
+            if (elements.recentQuestions) {
+                displayRecentQuestions(recentQuestions);
+            }
             
         } catch (error) {
             console.error('Error saving recent question:', error);
@@ -756,46 +1139,114 @@ The solution is: **[Your Answer Here]**
 
     // Save solution
     function saveSolution() {
+        if (!elements.resultsContent || !elements.solutionSubject || !elements.solutionStyle) return;
+        
         const solutionText = elements.resultsContent.textContent;
         const subject = elements.solutionSubject.textContent;
+        const style = elements.solutionStyle.textContent;
         
-        const blob = new Blob([`Subject: ${subject}\n\n${solutionText}`], { type: 'text/plain' });
+        const content = `AI Doubt Solver - Solution Report
+===============================
+
+Subject: ${subject}
+Explanation Style: ${style}
+Date: ${new Date().toLocaleString()}
+
+SOLUTION:
+${solutionText}
+
+---
+Generated by AI Doubt Solver
+https://doubt-solver.com`;
+        
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `solution_${subject}_${Date.now()}.txt`;
+        a.download = `solution_${subject.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        showNotification('Solution saved successfully!', 'success');
+        showNotification('Solution saved as text file!', 'success');
     }
 
     // Export solution
     function exportSolution() {
-        // For now, same as save
-        saveSolution();
+        if (!elements.resultsContent || !elements.solutionSubject || !elements.solutionStyle) return;
+        
+        const solutionText = elements.resultsContent.textContent;
+        const subject = elements.solutionSubject.textContent;
+        const style = elements.solutionStyle.textContent;
+        
+        const content = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI Doubt Solver - ${subject} Solution</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #6a11cb; border-bottom: 2px solid #2575fc; padding-bottom: 10px; }
+        h2 { color: #2575fc; margin-top: 30px; }
+        h3 { color: #00f2fe; }
+        .meta { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        pre { background: #2d2d2d; color: #fff; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+        .math { font-style: italic; color: #d63384; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>AI Doubt Solver - ${subject} Solution</h1>
+    <div class="meta">
+        <strong>Subject:</strong> ${subject}<br>
+        <strong>Explanation Style:</strong> ${style}<br>
+        <strong>Generated:</strong> ${new Date().toLocaleString()}
+    </div>
+    <div id="solution-content">
+        ${elements.resultsContent.innerHTML}
+    </div>
+    <div class="footer">
+        Generated by AI Doubt Solver | https://doubt-solver.com
+    </div>
+</body>
+</html>`;
+        
+        const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `solution_${subject.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification('Solution exported as HTML file!', 'success');
     }
 
     // Show new question form
     function showNewQuestion() {
-        elements.resultsSection.style.display = 'none';
+        if (elements.resultsSection) {
+            elements.resultsSection.style.display = 'none';
+        }
         clearAll();
-        elements.questionText.focus();
+        if (elements.questionText) {
+            elements.questionText.focus();
+        }
     }
 
     // Clear all inputs
     function clearAll() {
         // Clear text input
-        elements.questionText.value = '';
-        updateCharCount();
+        if (elements.questionText) {
+            elements.questionText.value = '';
+            updateCharCount();
+        }
         
         // Clear image input
-        elements.imageUpload.value = '';
-        elements.uploadArea.style.display = 'block';
-        elements.previewArea.style.display = 'none';
-        elements.imagePreview.innerHTML = '';
+        resetImageUpload();
         
         // Clear canvas
         clearCanvas();
@@ -804,48 +1255,152 @@ The solution is: **[Your Answer Here]**
         switchTab('text');
         
         // Reset form
-        elements.subjectSelect.value = 'general';
-        document.querySelector('input[name="style"][value="detailed"]').checked = true;
+        if (elements.subjectSelect) {
+            elements.subjectSelect.value = 'general';
+        }
+        
+        const defaultStyle = document.querySelector('input[name="style"][value="detailed"]');
+        if (defaultStyle) {
+            defaultStyle.checked = true;
+        }
+        
+        if (elements.imageSubject) {
+            elements.imageSubject.value = 'mathematics';
+        }
+        
+        // Reset solve button
+        if (elements.solveBtn) {
+            elements.solveBtn.disabled = false;
+            elements.solveBtn.innerHTML = '<i class="fas fa-brain"></i> Solve My Doubt';
+        }
         
         showNotification('All inputs cleared', 'info');
     }
 
+    // Set processing state
+    function setProcessingState(processing) {
+        state.isProcessing = processing;
+        
+        if (elements.solveBtn) {
+            elements.solveBtn.disabled = processing;
+            if (processing) {
+                elements.solveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            } else {
+                const buttonConfig = {
+                    text: { icon: 'fas fa-brain', text: 'Solve My Doubt' },
+                    image: { icon: 'fas fa-camera', text: 'Solve from Image' },
+                    handwriting: { icon: 'fas fa-paint-brush', text: 'Solve Drawing' }
+                };
+                const config = buttonConfig[state.currentTab];
+                elements.solveBtn.innerHTML = `<i class="${config.icon}"></i> ${config.text}`;
+            }
+        }
+        
+        if (elements.clearBtn) {
+            elements.clearBtn.disabled = processing;
+        }
+    }
+
     // Show loading state
     function showLoading() {
-        elements.loadingSection.style.display = 'block';
-        elements.resultsSection.style.display = 'none';
+        if (elements.loadingSection) {
+            elements.loadingSection.style.display = 'block';
+        }
+        if (elements.resultsSection) {
+            elements.resultsSection.style.display = 'none';
+        }
         
         // Animate steps
+        animateLoadingSteps();
+    }
+
+    // Animate loading steps
+    function animateLoadingSteps() {
         const steps = document.querySelectorAll('.loading-steps .step');
-        let currentStep = 0;
+        if (!steps.length) return;
         
-        const stepInterval = setInterval(() => {
+        // Clear any existing interval
+        if (state.loadingInterval) {
+            clearInterval(state.loadingInterval);
+        }
+        
+        // Reset all steps
+        steps.forEach(step => step.classList.remove('active'));
+        
+        let currentStep = 0;
+        state.loadingInterval = setInterval(() => {
             steps.forEach(step => step.classList.remove('active'));
             if (currentStep < steps.length) {
                 steps[currentStep].classList.add('active');
                 currentStep++;
             } else {
-                clearInterval(stepInterval);
+                currentStep = 0;
             }
-        }, 1000);
+        }, 800);
     }
 
     // Hide loading state
     function hideLoading() {
-        elements.loadingSection.style.display = 'none';
+        if (elements.loadingSection) {
+            elements.loadingSection.style.display = 'none';
+        }
+        
+        // Stop animation
+        if (state.loadingInterval) {
+            clearInterval(state.loadingInterval);
+            state.loadingInterval = null;
+        }
+        
+        // Reset steps
+        const steps = document.querySelectorAll('.loading-steps .step');
+        steps.forEach(step => step.classList.remove('active'));
+        if (steps[0]) steps[0].classList.add('active');
     }
 
     // Show notification
     function showNotification(message, type = 'info') {
-        const container = document.getElementById('notification-container');
-        if (!container) return;
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            // Create notification container if it doesn't exist
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 400px;
+            `;
+            document.body.appendChild(container);
+        }
         
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : 
+                        type === 'error' ? '#ef4444' : 
+                        type === 'warning' ? '#f59e0b' : '#3b82f6'};
+            color: white;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease;
+        `;
+        
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-circle',
+            warning: 'exclamation-triangle',
+            info: 'info-circle'
+        };
+        
         notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-            <button onclick="this.parentElement.remove()">
+            <i class="fas fa-${icons[type] || 'info-circle'}" style="margin-right: 10px; font-size: 1.2rem;"></i>
+            <span style="flex: 1;">${escapeHtml(message)}</span>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px;">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -858,6 +1413,70 @@ The solution is: **[Your Answer Here]**
                 notification.remove();
             }
         }, 5000);
+    }
+
+    // Test API connection
+    async function testAPI() {
+        console.log('Testing API connection...');
+        
+        try {
+            const response = await fetch(OPENROUTER_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin || 'https://doubt-solver.com',
+                    'X-Title': 'AI Doubt Solver'
+                },
+                body: JSON.stringify({
+                    model: "openai/gpt-3.5-turbo",
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'Hello, are you working? Reply with just "Yes" if you are.'
+                        }
+                    ],
+                    max_tokens: 10
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('API Test Success:', data);
+                showNotification('API connection successful! Ready to solve doubts.', 'success');
+                return true;
+            } else {
+                const errorText = await response.text();
+                console.error('API Test Failed:', response.status, errorText);
+                showNotification(`API test failed: ${response.status}. Will try alternative models.`, 'warning');
+                return false;
+            }
+        } catch (error) {
+            console.error('API Test Error:', error);
+            showNotification(`API test error: ${error.message}. Will try alternative models.`, 'warning');
+            return false;
+        }
+    }
+
+    // Make showNotification available globally for inline onclick handlers
+    window.showNotification = showNotification;
+    window.escapeHtml = escapeHtml;
+
+    // Add CSS for notifications if not already present
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            .notification.success { background: #10b981; }
+            .notification.error { background: #ef4444; }
+            .notification.warning { background: #f59e0b; }
+            .notification.info { background: #3b82f6; }
+        `;
+        document.head.appendChild(style);
     }
 
     // Initialize the application
