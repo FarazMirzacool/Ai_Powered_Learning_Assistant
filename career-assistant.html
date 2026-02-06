@@ -3,102 +3,905 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Career Assistant</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <title>AI Resume & Career Assistant | ByteBuddy AI</title>
     <link rel="stylesheet" href="career-assistant.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Additional styles for AI features */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: rgba(10, 10, 10, 0.95);
+            border-left: 4px solid #6a11cb;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            border-left-color: #10b981;
+        }
+
+        .notification.error {
+            border-left-color: #ef4444;
+        }
+
+        .notification.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .notification.info {
+            border-left-color: #3b82f6;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            font-size: 1.2rem;
+        }
+
+        .notification-message {
+            font-size: 0.95rem;
+            color: #e5e5e5;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-left: auto;
+        }
+
+        .notification-close:hover {
+            color: #fff;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(106, 17, 203, 0.3);
+            border-top: 3px solid #6a11cb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-modal .success-icon {
+            font-size: 3rem;
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+
+        .template-card.active {
+            border: 2px solid #6a11cb;
+        }
+
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(106, 17, 203, 0.2);
+            color: #e5e5e5;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9rem;
+        }
+
+        .skill-tag .remove-skill {
+            margin-left: 6px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .skill-tag .remove-skill:hover {
+            color: #fff;
+        }
+
+        .skills-tags {
+            min-height: 50px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .match-badge {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .roadmap-step {
+            background: rgba(106, 17, 203, 0.1);
+            border-left: 4px solid #6a11cb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .analysis-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .analysis-list li:last-child {
+            border-bottom: none;
+        }
+
+        .suggestions-list li {
+            background: rgba(106, 17, 203, 0.1);
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #6a11cb;
+        }
+    </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-briefcase"></i>
+                <span>AI Career Assistant</span>
+            </div>
+            <div class="nav-links">
+                <a href="interface.html"><i class="fas fa-home"></i> Home</a>
+                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i>Back</a>
+            </div>
+        </div>
+    </nav>
 
-    <div class="sidebar">
-        <div class="sidebar-item active" data-tab="dashboard">
-            <i class="fas fa-home"></i> Dashboard
+    <!-- Sidebar Navigation -->
+    <div class="container-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-user-tie"></i> Career Hub</h3>
+                <p>Your professional development center</p>
+            </div>
+            <div class="sidebar-menu">
+                <a href="#dashboard" class="sidebar-item active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#resume" class="sidebar-item" data-tab="resume">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Resume Analysis</span>
+                </a>
+                <a href="#builder" class="sidebar-item" data-tab="builder">
+                    <i class="fas fa-magic"></i>
+                    <span>AI Resume Builder</span>
+                </a>
+                <a href="#jobs" class="sidebar-item" data-tab="jobs">
+                    <i class="fas fa-search"></i>
+                    <span>Job Suggestions</span>
+                </a>
+                <a href="#skills" class="sidebar-item" data-tab="skills">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Skills Analysis</span>
+                </a>
+                <a href="#cover" class="sidebar-item" data-tab="cover">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Cover Letters</span>
+                </a>
+                <a href="#roadmap" class="sidebar-item" data-tab="roadmap">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Career Roadmap</span>
+                </a>
+                <a href="#progress" class="sidebar-item" data-tab="progress">
+                    <i class="fas fa-chart-line"></i>
+                    <span>My Progress</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="profile-summary">
+                    <div class="profile-avatar" id="userAvatar">U</div>
+                    <div class="profile-info">
+                        <strong id="userName">Byte Buddy</strong>
+                        <!--<small id="userTitle">Carrer Assistance</small>-->
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="sidebar-item" data-tab="resume">
-            <i class="fas fa-file-alt"></i> Resume Analysis
-        </div>
-        <div class="sidebar-item" data-tab="cover">
-            <i class="fas fa-envelope-open-text"></i> Cover Letter
-        </div>
-        <div class="sidebar-item" data-tab="mock">
-            <i class="fas fa-comments"></i> Mock Interview
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="tab-header">
+                    <h1><i class="fas fa-tachometer-alt"></i> Career Dashboard</h1>
+                    <p>Welcome to your AI-powered career development center</p>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Resume Score</h3>
+                            <div class="stat-value" id="resumeScore">--</div>
+                            <small>Last updated: <span id="lastResumeUpdate">Never</span></small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Job Matches</h3>
+                            <div class="stat-value" id="jobMatches">0</div>
+                            <small>Personalized recommendations</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Skills Level</h3>
+                            <div class="stat-value" id="skillsLevel">--</div>
+                            <small>Based on target role</small>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Roadmap Progress</h3>
+                            <div class="stat-value" id="roadmapProgress">0%</div>
+                            <small>Towards your career goal</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    <div class="action-grid">
+                        <button class="action-btn" onclick="switchTab('resume')">
+                            <i class="fas fa-upload"></i>
+                            <span>Upload Resume</span>
+                            <small>Get AI feedback</small>
+                        </button>
+                        
+                        <button class="action-btn" onclick="switchTab('builder')">
+                            <i class="fas fa-magic"></i>
+                            <span>Build Resume</span>
+                            <small>AI-generated</small>
+                        </button>
+                        
+                        <button class="action-btn" onclick="switchTab('jobs')">
+                            <i class="fas fa-search"></i>
+                            <span>Find Jobs</span>
+                            <small>Personalized matches</small>
+                        </button>
+                        
+                        <button class="action-btn" onclick="switchTab('cover')">
+                            <i class="fas fa-envelope"></i>
+                            <span>Cover Letter</span>
+                            <small>Generate instantly</small>
+                        </button>
+                    </div>
+                </div>
+                                     <!-- Add this in the upload-section div, after target-inputs -->
+<div style="text-align: center; margin: 20px 0;">
+    <button class="btn btn-outline" onclick="testResumeAnalysis()">
+        <i class="fas fa-vial"></i> Test Resume Analysis (Demo)
+    </button>
+</div>
+                
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>Welcome to Career Assistant!</strong>
+                                <p>Get started by uploading your resume or setting career preferences</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            .
+
+            <!-- Resume Analysis Tab -->
+            <div id="resume" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-file-alt"></i> Resume Analysis</h1>
+                    <p>Upload your resume for AI-powered feedback and optimization suggestions</p>
+                </div>
+                
+                <div class="analysis-container">
+                    <!-- Upload Section -->
+                    <div class="upload-section">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag & Drop your resume</h3>
+                            <p>Supports PDF, DOC, DOCX, TXT (Max 5MB)</p>
+                            <input type="file" id="resumeFile" accept=".pdf,.doc,.docx,.txt" hidden>
+                            <button class="btn btn-primary" onclick="document.getElementById('resumeFile').click()">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                        
+                        <div class="target-inputs">
+                            <div class="input-group">
+                                <label for="targetRole"><i class="fas fa-bullseye"></i> Target Role (Optional)</label>
+                                <input type="text" id="targetRole" placeholder="e.g., Frontend Developer">
+                            </div>
+                            <div class="input-group">
+                                <label for="targetCompany"><i class="fas fa-building"></i> Target Company (Optional)</label>
+                                <input type="text" id="targetCompany" placeholder="e.g., Google, Amazon">
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-large" id="analyzeBtn">
+                            <i class="fas fa-chart-line"></i> Analyze Resume 
+                        </button>
+                    </div>
+                    
+                    <!-- Results Section (Hidden initially) -->
+                    <div class="results-section" id="resultsSection" style="display: none;">
+                        <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+                        
+                        <div class="score-cards">
+                            <div class="score-card">
+                                <div class="score-circle">
+                                    <span id="overallScore">0</span>
+                                    <small>/100</small>
+                                </div>
+                                <h4>Overall Score</h4>
+                                <p>Resume Quality</p>
+                            </div>
+                            
+                            <div class="score-card">
+                                <div class="score-circle">
+                                    <span id="atsScore">0</span>
+                                    <small>/100</small>
+                                </div>
+                                <h4>ATS Score</h4>
+                                <p>System Compatibility</p>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-details">
+                            <div class="analysis-box">
+                                <h3><i class="fas fa-check-circle"></i> Strengths</h3>
+                                <ul id="strengthsList" class="analysis-list"></ul>
+                            </div>
+                            
+                            <div class="analysis-box">
+                                <h3><i class="fas fa-exclamation-triangle"></i> Improvements</h3>
+                                <ul id="weaknessesList" class="analysis-list"></ul>
+                            </div>
+                            
+                            <div class="analysis-box full-width">
+                                <h3><i class="fas fa-lightbulb"></i> Actionable Suggestions</h3>
+                                <ul id="suggestionsList" class="suggestions-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Resume Builder Tab -->
+            <div id="builder" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-magic"></i> AI Resume Builder</h1>
+                    <p>Create a professional resume from scratch with AI assistance</p>
+                </div>
+                
+                <div class="resume-builder">
+                    <div class="builder-steps">
+                        <div class="step active" data-step="1">
+                            <span class="step-number">1</span>
+                            <span class="step-title">Basic Info</span>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <span class="step-title">Experience</span>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <span class="step-title">Education</span>
+                        </div>
+                        <div class="step" data-step="4">
+                            <span class="step-number">4</span>
+                            <span class="step-title">Skills</span>
+                        </div>
+                        <div class="step" data-step="5">
+                            <span class="step-number">5</span>
+                            <span class="step-title">Generate</span>
+                        </div>
+                    </div>
+                    
+                    <div class="builder-form">
+                        <!-- Step 1: Basic Information -->
+                        <div class="form-step active" id="step1">
+                            <h3>Personal Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="fullName" placeholder="John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="email" placeholder="john@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" id="phone" placeholder="+1 234 567 8900">
+                                </div>
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <input type="text" id="location" placeholder="City, Country">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Professional Summary</label>
+                                    <textarea id="summary" rows="3" placeholder="Briefly describe your professional background and career objectives..."></textarea>
+                                    <small>AI will enhance this summary</small>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="nextStep(2)">Next <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                        
+                        <!-- Step 2: Experience -->
+                        <div class="form-step" id="step2">
+                            <h3>Work Experience</h3>
+                            <div id="experienceEntries">
+                                <div class="experience-entry">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Job Title *</label>
+                                            <input type="text" class="exp-title" placeholder="Software Engineer">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Company *</label>
+                                            <input type="text" class="exp-company" placeholder="Tech Corp">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Start Date</label>
+                                            <input type="month" class="exp-start">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>End Date</label>
+                                            <input type="month" class="exp-end" placeholder="Present">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label>Responsibilities</label>
+                                            <textarea class="exp-desc" placeholder="Describe your key achievements and responsibilities..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline" onclick="addExperience()">
+                                <i class="fas fa-plus"></i> Add Experience
+                            </button>
+                            <div class="step-buttons">
+                                <button class="btn btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                                <button class="btn btn-primary" onclick="nextStep(3)">Next <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Education -->
+                        <div class="form-step" id="step3">
+                            <h3>Education</h3>
+                            <div id="educationEntries">
+                                <div class="education-entry">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label>Degree *</label>
+                                            <input type="text" class="edu-degree" placeholder="Bachelor of Science">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Field of Study</label>
+                                            <input type="text" class="edu-field" placeholder="Computer Science">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Institution *</label>
+                                            <input type="text" class="edu-institution" placeholder="University Name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Graduation Year</label>
+                                            <input type="number" class="edu-year" placeholder="2023">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline" onclick="addEducation()">
+                                <i class="fas fa-plus"></i> Add Education
+                            </button>
+                            <div class="step-buttons">
+                                <button class="btn btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                                <button class="btn btn-primary" onclick="nextStep(4)">Next <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Skills -->
+                        <div class="form-step" id="step4">
+                            <h3>Skills & Technologies</h3>
+                            <div class="skills-input">
+                                <label>Add your skills (press Enter after each skill)</label>
+                                <div class="skills-tags" id="skillsTags">
+                                    <!-- Skills will appear here as tags -->
+                                </div>
+                                <input type="text" id="skillInput" placeholder="Type skill and press Enter">
+                                <small>Example: JavaScript, React, Python, AWS</small>
+                            </div>
+                            <div class="step-buttons">
+                                <button class="btn btn-outline" onclick="prevStep(3)"><i class="fas fa-arrow-left"></i> Back</button>
+                                <button class="btn btn-primary" onclick="nextStep(5)">Generate Resume <i class="fas fa-magic"></i></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 5: Generate -->
+                        <div class="form-step" id="step5">
+                            <h3>Generate Your Resume</h3>
+                            <div class="template-selection">
+                                <h4>Choose a Template</h4>
+                                <div class="templates-grid">
+                                    <div class="template-card active" data-template="professional" onclick="selectTemplate('professional')">
+                                        <div class="template-preview">
+                                            <div class="template-header"></div>
+                                            <div class="template-body">
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                            </div>
+                                        </div>
+                                        <span>Professional</span>
+                                    </div>
+                                    <div class="template-card" data-template="modern" onclick="selectTemplate('modern')">
+                                        <div class="template-preview modern">
+                                            <div class="template-header"></div>
+                                            <div class="template-body">
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                            </div>
+                                        </div>
+                                        <span>Modern</span>
+                                    </div>
+                                    <div class="template-card" data-template="creative" onclick="selectTemplate('creative')">
+                                        <div class="template-preview creative">
+                                            <div class="template-header"></div>
+                                            <div class="template-body">
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                            </div>
+                                        </div>
+                                        <span>Creative</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="generate-actions">
+                                <button class="btn btn-primary btn-large" onclick="generateResume()">
+                                    <i class="fas fa-magic"></i> Generate with AI
+                                </button>
+                                <button class="btn btn-outline" onclick="previewResume()">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                            <div class="step-buttons">
+                                <button class="btn btn-outline" onclick="prevStep(4)">
+                                    <i class="fas fa-arrow-left"></i> Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Suggestions Tab -->
+            <div id="jobs" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-search"></i> Job Suggestions</h1>
+                    <p>Personalized job and internship recommendations based on your profile</p>
+                </div>
+                
+                <div class="jobs-container">
+                    <!-- Job Filters -->
+                    <div class="job-filters">
+                        <div class="filter-group">
+                            <label><i class="fas fa-filter"></i> Filter Jobs</label>
+                            <select id="jobTypeFilter">
+                                <option value="all">All Types</option>
+                                <option value="full-time">Full-time</option>
+                                <option value="part-time">Part-time</option>
+                                <option value="internship">Internship</option>
+                                <option value="remote">Remote</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-sort"></i> Sort By</label>
+                            <select id="jobSort">
+                                <option value="relevance">Relevance</option>
+                                <option value="date">Date Posted</option>
+                                <option value="salary">Salary</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadJobSuggestions()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <!-- Job List -->
+                    <div class="job-list" id="jobList">
+                        <!-- Jobs will be loaded here by AI -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Analysis Tab -->
+            <div id="skills" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-chart-bar"></i> Skills Analysis</h1>
+                    <p>Identify skill gaps and get personalized learning recommendations</p>
+                </div>
+                
+                <div class="skills-analysis">
+                    <div class="skills-overview">
+                        <div class="skills-chart">
+                            <div class="chart-container">
+                                <canvas id="skillsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="skills-summary">
+                            <h3>Your Skills Profile</h3>
+                            <div class="summary-stats">
+                                <div class="summary-stat">
+                                    <span class="stat-value" id="currentSkills">0</span>
+                                    <span class="stat-label">Current Skills</span>
+                                </div>
+                                <div class="summary-stat">
+                                    <span class="stat-value" id="requiredSkills">0</span>
+                                    <span class="stat-label">Required Skills</span>
+                                </div>
+                                <div class="summary-stat">
+                                    <span class="stat-value" id="skillGap">0</span>
+                                    <span class="stat-label">Skills Gap</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skills-details">
+                        <div class="skills-section">
+                            <h3><i class="fas fa-check-circle"></i> Your Current Skills</h3>
+                            <div class="skills-list" id="currentSkillsList">
+                                <!-- Current skills will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <div class="skills-section">
+                            <h3><i class="fas fa-exclamation-circle"></i> Skills to Develop</h3>
+                            <div class="skills-list" id="missingSkillsList">
+                                <!-- Missing skills will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendations">
+                        <h3><i class="fas fa-lightbulb"></i> Learning Recommendations</h3>
+                        <div class="recommendation-list" id="recommendationsList">
+                            <!-- Recommendations will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cover Letters Tab -->
+            <div id="cover" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-envelope-open-text"></i> Cover Letter Generator</h1>
+                    <p>Create personalized cover letters tailored to specific job applications</p>
+                </div>
+                
+                <div class="cover-letter-generator">
+                    <div class="cover-form">
+                        <div class="form-group">
+                            <label>Job Title *</label>
+                            <input type="text" id="coverJobTitle" placeholder="Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label>Company Name *</label>
+                            <input type="text" id="coverCompany" placeholder="Google">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Job Description (Optional)</label>
+                            <textarea id="coverJobDescription" rows="4" placeholder="Paste the job description here for better personalization..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Key Points to Highlight</label>
+                            <textarea id="coverKeyPoints" rows="3" placeholder="List specific achievements or skills you want to emphasize..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-large" onclick="generateCoverLetter()">
+                            <i class="fas fa-magic"></i> Generate Cover Letter
+                        </button>
+                    </div>
+                    
+                    <div class="cover-preview" id="coverPreview" style="display: none;">
+                        <h3>Generated Cover Letter</h3>
+                        <div class="preview-content" id="coverLetterContent">
+                            <!-- Cover letter will appear here -->
+                        </div>
+                        <div class="preview-actions">
+                            <button class="btn btn-primary" onclick="downloadCoverLetter()">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-outline" onclick="editCoverLetter()">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-outline" onclick="copyCoverLetter()">
+                                <i class="fas fa-copy"></i> Copy Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Career Roadmap Tab -->
+            <div id="roadmap" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-map-marked-alt"></i> Career Roadmap</h1>
+                    <p>Get a customized step-by-step plan to achieve your career goals</p>
+                </div>
+                
+                <div class="roadmap-container">
+                    <div class="roadmap-setup">
+                        <h3>Set Your Career Goal</h3>
+                        <div class="form-group">
+                            <label>Target Position</label>
+                            <input type="text" id="targetPosition" placeholder="e.g., Senior Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label>Timeline (Months)</label>
+                            <input type="range" id="timeline" min="3" max="24" value="12" oninput="document.getElementById('timelineValue').textContent = this.value + ' months'">
+                            <span id="timelineValue">12 months</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateRoadmap()">
+                            <i class="fas fa-road"></i> Generate Roadmap
+                        </button>
+                    </div>
+                    
+                    <div class="roadmap-visual" id="roadmapVisual" style="display: none;">
+                        <h3>Your Personalized Roadmap</h3>
+                        <div class="roadmap-timeline" id="roadmapTimeline">
+                            <!-- Roadmap steps will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Tracking Tab -->
+            <div id="progress" class="tab-content">
+                <div class="tab-header">
+                    <h1><i class="fas fa-chart-line"></i> My Progress</h1>
+                    <p>Track your career development journey and achievements</p>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-overview">
+                        <div class="progress-chart">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                        <div class="progress-stats">
+                            <div class="progress-stat">
+                                <span class="stat-value" id="applicationsCount">0</span>
+                                <span class="stat-label">Applications</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-value" id="interviewsCount">0</span>
+                                <span class="stat-label">Interviews</span>
+                            </div>
+                            <div class="progress-stat">
+                                <span class="stat-value" id="offersCount">0</span>
+                                <span class="stat-label">Offers</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="milestones">
+                        <h3><i class="fas fa-trophy"></i> Career Milestones</h3>
+                        <div class="milestone-list" id="milestoneList">
+                            <!-- Milestones will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="main-content">
-        
-        <div id="dashboard" class="tab-content active">
-            <div class="welcome-card">
-                <h1>Welcome to <span class="text-gradient">Career AI</span></h1>
-                <p>Latest ATS Score</p>
-                <div class="stat-value" id="lastAtsScore">0%</div>
-                <div style="margin-top: 20px; color: #94a3b8;">
-                    <p>Start by uploading your resume in the <b>Resume Analysis</b> tab!</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="resume" class="tab-content">
-            <div class="card">
-                <h1><i class="fas fa-file-upload"></i> Resume Analysis</h1>
-                <div class="form-group">
-                    <label>Upload your Resume (PDF only):</label>
-                    <input type="file" id="resumeFile" accept=".pdf" style="margin-top: 10px;">
-                </div>
-                <button class="btn btn-primary" id="analyzeBtn" onclick="runResumeAnalysis()" style="margin-top: 15px;">
-                    <i class="fas fa-search"></i> Analyze Resume
-                </button>
-
-                <div id="analysisResult" class="results-box" style="display: none; margin-top: 25px;">
-                    <h3><i class="fas fa-chart-bar"></i> AI Analysis Report</h3>
-                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #334155;">
-                    <div id="analysisText"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="cover" class="tab-content">
-            <div class="card">
-                <h1><i class="fas fa-envelope-open-text"></i> Cover Letter Generator</h1>
-                <div class="cover-form">
-                    <div class="form-group">
-                        <label>Job Title *</label>
-                        <input type="text" id="coverJobTitle" placeholder="e.g. Software Engineer">
-                    </div>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Company Name *</label>
-                        <input type="text" id="coverCompany" placeholder="e.g. Google">
-                    </div>
-                    <div class="form-group full-width" style="margin-top: 15px;">
-                        <label>Job Description (Paste here)</label>
-                        <textarea id="coverJobDescription" rows="4" placeholder="Paste the job requirements..."></textarea>
-                    </div>
-                    <button class="btn btn-primary" onclick="generateCoverLetter()" style="margin-top: 20px;">
-                        <i class="fas fa-magic"></i> Generate Cover Letter
-                    </button>
-                </div>
-
-                <div class="results-box" id="coverPreview" style="display: none; margin-top: 25px;">
-                    <div id="coverLetterContent"></div>
-                    <button class="btn btn-outline" onclick="copyCoverLetter()" style="margin-top: 15px; width: auto;">
-                        <i class="fas fa-copy"></i> Copy to Clipboard
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="mock" class="tab-content">
-            <div class="card">
-                <h1><i class="fas fa-user-tie"></i> AI Mock Interview</h1>
-                <p style="color: #94a3b8; margin-bottom: 15px;">Generate customized interview questions based on your specific resume.</p>
-                <button class="btn btn-primary" onclick="generateMockQuestions()">Start Mock Interview</button>
-                    <i class="fas fa-play"></i> Start Interview Questions
-                </button>
-                <div id="interviewResult" class="results-box" style="display: none; margin-top: 25px;"></div>
-            </div>
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <h3 id="loadingTitle">Processing...</h3>
+            <p id="loadingMessage">Please wait while we analyze your request</p>
         </div>
     </div>
 
-   <script src="career-assistant.js"></script>
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 id="successTitle">Success!</h3>
+            <p id="successMessage">Operation completed successfully</p>
+            <button class="btn btn-primary" onclick="closeModal('successModal')">Continue</button>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="career-assistant.js"></script>
 </body>
 </html>
