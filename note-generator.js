@@ -1,5 +1,5 @@
 // Note Generator JavaScript with Open Router API Integration
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'meta-llama/llama-3.1-8b-instruct';
 
